@@ -33,8 +33,8 @@ operationalisations.
 ## Quickstart
 
 ```bash
-git clone https://github.com/<user>/ius-prediction-markets
-cd ius-prediction-markets
+git clone git@github.com:ravioli00/ius_pm.git
+cd ius_pm
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[test]"
 
