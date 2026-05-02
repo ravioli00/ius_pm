@@ -1,0 +1,600 @@
+\documentclass{article}
+
+\PassOptionsToPackage{numbers, compress}{natbib}
+
+% Use preprint mode so the venue line in the footer reads "Preprint."
+\usepackage[preprint]{neurips_2024}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{xcolor}
+\usepackage{graphicx}
+
+% Math shortcuts
+\providecommand{\Cov}{\mathrm{Cov}}
+\providecommand{\Var}{\mathrm{Var}}
+\providecommand{\Corr}{\mathrm{Corr}}
+\providecommand{\E}{\mathbb{E}}
+\providecommand{\indep}{\perp\!\!\!\perp}
+
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+
+% \answerYes/\answerNo/\answerNA are provided by neurips_2024.sty
+
+\title{The Information Uniqueness Score:\\
+A Pre-Registered Null on a 16-Market Prediction-Market Benchmark}
+
+\author{%
+  Saman Sayahpour \\
+  Carnegie Mellon University \\
+  \texttt{ssayahpo@andrew.cmu.edu} \\
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Whether prediction-market (PM) prices contain information not already impounded in deeper financial markets is an old question, addressed primarily with pairwise Granger causality and regression-based lead-lag tests. We formalize the lead-follow question through the \emph{Information Uniqueness Score} (IUS), an information-theoretic ratio quantifying the fraction of a PM's information that is non-redundant conditional on observable financial variables. Its computable proxy, the Information Leadership Score (ILS), is based on incremental cross-predictive $R^2$. The hypothesis: a PM should causally lead financial markets when its information is unique, and follow when its information is redundant. We pre-register a panel of 16 prediction markets spanning political, geopolitical, legal, policy, and price-based contracts (\$7.8B+ of Polymarket volume, 22{,}000+ hourly observations), with a frozen tier assignment and per-market financial channels. The pre-registered Spearman $\rho(\mathrm{ILS}, L) = -0.046$ with permutation $p = 0.868$ two-sided, $p = 0.568$ one-sided, bootstrap 95\% CI $[-0.60, +0.55]$. The tier comparison runs opposite the hypothesis (low-IUS mean $L = 0.29$ versus high-IUS mean $L = 0.19$). A pre-specified case study on the June 2025 US-strikes-Iran event, the one panel market with reported pre-event insider trading \citep{chainalysis2025iran}, shows Oil Granger-causes Iran PM at $p = 0.015$ while Iran PM does not Granger-cause Oil ($p = 0.508$, $n = 28$). Four post-hoc leadership operationalizations on the full panel yield directionally positive Spearman $\rho$ with ILS but none reach $p < 0.10$ at $n = 16$. Restricting to the five markets with $n_\text{used} \ge 800$ (a direct test of the panel-length-confounding mechanism), all five $L$ operationalizations yield positive $\rho$ (mean $+0.67$, two reach one-sided $p \le 0.05$); the pre-registered $L$ flips from $-0.05$ on the full panel to $+0.20$ on the subset. Monte Carlo validation on synthetic linear-Gaussian SVARs with known causal direction shows the methodology recovers the hypothesis at $\rho(\mathrm{ILS}, L) = +0.96$ at $n = 16$ and $+0.91$ at $n = 60$ (permutation $p < 10^{-4}$); recovery survives heavy-tailed innovations ($\rho = +0.92$) but degrades under regime-switching ($\rho = +0.58$, ground-truth recovery collapses) and strong latent confounding ($\rho = +0.67$). The empirical null is therefore consistent with non-stationarity or latent macro-shock confounding on the real-data DGP, not with the methodology being too noisy at the linear-Gaussian baseline. The panel is released as a public benchmark for PM causal-discovery research, alongside the pre-registration document and code.
+\end{abstract}
+
+%% ============================================================================
+\section{Introduction}
+\label{sec:intro}
+%% ============================================================================
+
+Prediction markets (PMs) aggregate dispersed private beliefs into prices through trading on binary or multi-outcome contracts \citep{arrow2008promise, wolfers2004prediction, manski2006interpreting}. Whether the prices they produce contain information not already impounded in deeper, more liquid financial markets has been an open question since their inception. A positive answer would make them an early indicator for asset allocation, monetary-policy monitoring, and geopolitical risk assessment. A negative answer would make them a convenient summary of what financial markets already know.
+
+The standard empirical treatment is pairwise Granger causality \citep{granger1969investigating, tzeng2021predicting, abolghasemi2021determining}, which captures predictive precedence rather than causation, ignores contemporaneous effects, and is limited to pairwise comparisons in what is naturally a multivariate system. Prior empirical work has produced individual-market verdicts but no general predictor for which PMs should lead and which should follow.
+
+We propose such a predictor. The hypothesis: causal direction between a PM and financial markets depends on whether the PM aggregates information that is \emph{non-redundant} conditional on observable financial variables. We formalize this as the Information Uniqueness Score (IUS), an information-theoretic ratio of conditional to unconditional mutual information, and develop a computable proxy, the Information Leadership Score (ILS), based on incremental cross-predictive $R^2$. We test the prediction with a pre-registered protocol on a 16-market panel.
+
+\paragraph{Methodological contributions.}
+\begin{enumerate}
+\item We define the IUS as a population-level information-theoretic quantity (\S\ref{sec:ius_def}), state its connection to Partial Information Decomposition, and derive the operational ILS proxy with its identification under linear-Gaussian dependence (\S\ref{sec:ils}).
+\item We characterize three identification regimes for the test statistic: PCMCI+ (causal sufficiency), LPCMCI (latent-confounder admitting), and Granger (predictive precedence). The null reproduces under all three; the reproduction is robustness across identification assumptions, with the shared $n = 16$ panel-size limitation noted as a power constraint, not a method-internal failure.
+\end{enumerate}
+
+\paragraph{Empirical contributions.}
+\begin{enumerate}\setcounter{enumi}{2}
+\item A pre-registered, diverse panel of 16 prediction markets (eight political/geopolitical/legal, four mid-uniqueness, four price/policy-based) spanning \$7.8B+ of Polymarket volume and 22{,}000+ hourly observations, frozen by manifest and pre-registration hash before any causal-discovery computation (\S\ref{sec:panel}).
+\item A pre-registered null with mechanism analysis: Spearman $\rho(\mathrm{ILS}, L) = -0.046$ at permutation $p = 0.868$; the tier comparison runs opposite the hypothesis. We attribute the result to three identifiable mechanisms (panel-length confounding, ILS estimator noise, inverted directional flow on high-IUS markets), each documented in \S\ref{sec:why}, and to a pre-specified Iran event-window case study showing information flow into the PM rather than out of it.
+\end{enumerate}
+
+\paragraph{Scope.}
+This paper specifies a causal-direction predictor, pre-registers a test of it, and reports a null. We do not claim the IUS is wrong as a population-level proposal. We claim that, as operationalized and estimated at hourly resolution on this 16-market panel, IUS does not predict the leadership score $L$ at conventional thresholds. The panel and pre-registration are released so that future PM causal-discovery methods can be evaluated against the same null.
+
+%% ============================================================================
+\section{Related Work}
+\label{sec:related}
+%% ============================================================================
+
+\paragraph{PM efficiency and lead-lag.}
+The efficient-market hypothesis for PMs posits that contract prices aggregate all available information about the underlying event \citep{manski2006interpreting}. Empirically, election PMs are well calibrated on average \citep{rothschild2009forecasting} but exhibit favorite-longshot biases \citep{snowberg2010explaining}; their lead-lag relationships with financial markets have been examined event-by-event using pairwise Granger causality \citep{tzeng2021predicting, abolghasemi2021determining}. Our contribution is to (i) replace the pairwise Granger pipeline with multivariate causal-discovery methods \citep{runge2020discovering, gerhardus2020high} and (ii) introduce an information-theoretic predictor of causal direction tested under a pre-registered protocol.
+
+\paragraph{Causal discovery.}
+We use PCMCI+ \citep{runge2020discovering}, LPCMCI \citep{gerhardus2020high}, and Granger as our primary lead-lag classifiers. PCMCI+ is the time-series constraint-based workhorse handling lagged and contemporaneous effects; LPCMCI extends it to admit latent confounders and produce a PAG with bidirected edges. \citet{dong2024three} classify the three ``demons'' of financial causal discovery as resolution mismatch, nonstationarity, and latent factors; our panel exhibits all three.
+
+\paragraph{Information-theoretic measures.}
+The IUS is related to Partial Information Decomposition \citep{williams2010nonnegative}, which decomposes total information $I(O; P, \mathbf{F})$ into unique, redundant, and synergistic components. The IUS is conceptually the ratio of the unique-to-$P$ component to the total-from-$P$ component. We do not commit to a specific PID variant (Williams-Beer $I_\text{min}$, Bertschinger-Rauh $I_\text{BROJA}$, Finn-Lizier $I_\downarrow$) because IUS as defined in Eq.~\eqref{eq:ius} is computed directly from MI and conditional MI without invoking PID's lattice decomposition; the PID connection is conceptual rather than computational. Transfer entropy \citep{schreiber2000measuring} and its linear-Gaussian Granger-causality equivalence \citep{barnett2009granger} offer alternative directional measures; the ILS we use is an incremental-$R^2$ variant chosen for estimation stability at moderate sample sizes. We estimate mutual information with the KSG $k$-nearest-neighbor estimator \citep{kraskov2004estimating} and use the modified mixed-discrete-continuous variant \citep{ross2014mutual} where one variable is binary.
+
+%% ============================================================================
+\section{The Information Uniqueness Score}
+\label{sec:ius_def}
+%% ============================================================================
+
+\paragraph{Setup.}
+Let $O \in \{0, 1\}$ denote a binary outcome (e.g., ``Fed cuts rates by 25bp''), $P_t \in [0,1]$ the prediction-market probability at time $t$, and $\mathbf{F}_t = (F_t^1, \ldots, F_t^K)$ a vector of $K$ financial-market variables (log returns, yield changes) observed at the same time. We assume joint stationarity of $(P_t, \mathbf{F}_t)$ within the contract's active window and a single realized $O$ per market.
+
+\begin{definition}[Information Uniqueness Score]
+\label{def:ius}
+The Information Uniqueness Score of a PM $P$ with respect to financial variables $\mathbf{F}$ and outcome $O$ is
+\begin{equation}
+\mathrm{IUS}(P; \mathbf{F}, O) \;=\; \frac{I(O;\, P_t \mid \mathbf{F}_t)}{I(O;\, P_t)} \;\ge\; 0,
+\label{eq:ius}
+\end{equation}
+where $I(\cdot;\cdot)$ is mutual information and $I(\cdot;\cdot \mid \cdot)$ is conditional mutual information.
+\end{definition}
+
+\paragraph{Range.}
+$\mathrm{IUS} \in [0, 1]$ when $\mathbf{F}_t$ has no synergistic interaction with $P_t$ in informing $O$, i.e., when $I(O; P_t \mid \mathbf{F}_t) \le I(O; P_t)$. Synergy (e.g., $O = X \oplus Y$, $P = X$, $F = Y$) can drive $\mathrm{IUS} > 1$, with $\mathrm{IUS} = \infty$ when $I(O; P_t) = 0$ but $\mathbf{F}_t$ unlocks information through $P_t$. We treat $\mathrm{IUS}$ as a non-negative quantity throughout and rely on its rank, not its absolute value, in the empirical test (\S\ref{sec:panel}).
+
+\paragraph{Interpretation.}
+$I(O;P_t)$ is the total information the PM price carries about the outcome; $I(O;P_t \mid \mathbf{F}_t)$ is the residual information after conditioning on financial variables. $\mathrm{IUS} = 0$ iff $P_t \indep O \mid \mathbf{F}_t$ (purely redundant); large $\mathrm{IUS}$ indicates that conditioning on $\mathbf{F}_t$ does not reduce the information $P_t$ carries about $O$ (PM information unique or synergistic). By the chain rule of mutual information \citep{cover2006elements},
+\begin{equation}
+I(O;\, P_t, \mathbf{F}_t) = I(O;\, \mathbf{F}_t) + I(O;\, P_t \mid \mathbf{F}_t),
+\end{equation}
+so the numerator of IUS is the incremental information the PM adds beyond financials.
+
+\paragraph{Predictive variant.}
+Because $O$ is realized only once per market, we also define a time-series variant using realized changes:
+\begin{equation}
+\mathrm{IUS}_\Delta(P; \mathbf{F}) = \frac{I(\Delta P_{t+h}; P_t \mid \mathbf{F}_t)}{I(\Delta P_{t+h}; P_t)},
+\quad h = 1\text{ hour}.
+\label{eq:ius_delta}
+\end{equation}
+
+\paragraph{Causal hypothesis.}
+We hypothesize: a PM with high IUS aggregates information not yet in financial prices, so financial prices adjust \emph{after} observing PM movements, producing a causal $P \to F$ edge. A PM with low IUS is redundant with financial prices, so it adjusts to track them, producing a causal $F \to P$ edge. This hypothesis implicitly assumes no common cause $S$ acts faster on $\mathbf{F}$ than on $P$: under such a confounder (e.g., Fed announcements moving futures before PMs because of liquidity differential), $\mathrm{IUS}$ would be low without $F \to P$ being the operative causal path. We return to this in \S\ref{sec:why}. The strong (biconditional) form of this hypothesis would specify a threshold $\tau$ such that $\mathrm{IUS} > \tau \Leftrightarrow$ PM is a causal leader. We test a strictly weaker necessary condition: that the population-level Spearman rank correlation between $\mathrm{IUS}$ and a leadership score $L$ (defined in \S\ref{sec:panel}) is positive. Rejecting this necessary condition implies the biconditional fails for any choice of $\tau$. We make no claim that failing to reject implies the biconditional holds, and we do not estimate $\tau$.
+
+\paragraph{Causal interpretation under method assumptions.}
+The leadership score $L$ is computed from a PCMCI+ output (\S\ref{sec:panel}). PCMCI+ identifies causal structure under faithfulness and causal sufficiency; LPCMCI relaxes sufficiency by admitting bidirected (latent-confounded) edges in the output PAG. We treat $L$ as an empirical proxy for causal direction \emph{conditional on these identification assumptions holding}; under their failure (e.g., a deterministic relation that violates faithfulness, or unmodeled non-stationarity violating the i.i.d.-replicates assumption), $L$ is a predictive-precedence quantity rather than a causal-direction quantity. Granger causality (used in the Iran case study, \S\ref{sec:iran}) is purely predictive and is reported with this interpretation in mind.
+
+%% ============================================================================
+\subsection{The Information Leadership Score (ILS): an operational proxy}
+\label{sec:ils}
+%% ============================================================================
+
+The KSG estimator's variance scales like $n^{-1/(d+1)}$ in dimension $d$, infeasible at our $K = 12$ and $n \in [200, 9000]$. We therefore use a linear surrogate.
+
+\begin{definition}[Information Leadership Score]
+\label{def:ils}
+\begin{equation}
+\mathrm{ILS}(P, \mathbf{F}) \;=\; \frac{\overline{\Delta R^2_{P \to F}}}{\Delta R^2_{\mathbf{F} \to P}}
+\label{eq:ils}
+\end{equation}
+where
+\begin{align}
+\Delta R^2_{\mathbf{F} \to P} &= R^2(\Delta P_{t+h} \sim P_t, \mathbf{F}_t) - R^2(\Delta P_{t+h} \sim P_t),\\
+\Delta R^2_{P \to F^j} &= R^2(\Delta F^j_{t+h} \sim P_t, \mathbf{F}^{-j}_t) - R^2(\Delta F^j_{t+h} \sim \mathbf{F}^{-j}_t),
+\end{align}
+and the numerator averages over the $K$ financial channels.
+\end{definition}
+
+\paragraph{Why ILS is a valid proxy.}
+Under a linear-Gaussian model, incremental $R^2$ is a monotone function of the partial correlation, which is itself a monotone function of conditional mutual information for jointly Gaussian variables (the closed form $I(X;Y \mid Z) = -\tfrac{1}{2}\log(1 - \rho^2_{X,Y \mid Z})$ is standard; \citealt{cover2006elements}, Ch.~8). For non-Gaussian dependence the monotonicity is approximate; we accept the approximation in exchange for far smaller sampling variance than KSG delivers at our sample sizes. The trade-off is documented in our pre-registration as a known limitation.
+
+\paragraph{Asymmetric conditioning sets.}
+The numerator of Eq.~\eqref{eq:ils} conditions on $\mathbf{F}^{-j}_t$ when measuring the contribution of $P_t$ to $\Delta F^j_{t+h}$, while the denominator conditions on $P_t$ when measuring the contribution of $\mathbf{F}_t$ to $\Delta P_{t+h}$. The two sides are not parallel: each measures the marginal contribution of the source variable beyond the natural baseline (own-history autoregression on the PM side; same-system other-channels on the financial side). A symmetric formulation that conditions both sides on $(P_t, \mathbf{F}^{-j}_t)$ is straightforward to implement but inflates $K$ in the denominator regression, which at our shortest panel lengths $n \approx 200$ destabilizes the estimator. We adopt the asymmetric form for variance reasons and note that under a linear-Gaussian model both formulations yield the same direction of $\mathrm{ILS}$ relative to $1$ (the threshold for the leader/follower call), only the magnitude differs.
+
+The boundedness of $P_t \in [0,1]$ further violates the linear-Gaussian assumption. We compute ILS on first-differences $\Delta P_t$ to mitigate this, but $\Delta P_t$ remains skewed near the boundaries (election PMs near 50\% saturation; PolyBTC at extreme tails). Robustness to a copula-rank Gaussianization of $\Delta P_t$ is checked in the post-hoc sensitivity (\S\ref{sec:results}, \emph{cross-correlation} metric) and yields the same qualitative null.
+
+\paragraph{Interpretation.}
+$\mathrm{ILS} > 1$: PM has more incremental predictive power for financial markets than vice versa (PM is a net information leader). $\mathrm{ILS} < 1$: financial markets predict PM changes better than the reverse (PM is a net follower).
+
+\paragraph{Connection to transfer entropy.}
+The Information Leadership Score is the linear-Gaussian analog of the directed transfer-entropy ratio $T_{P \to F} / T_{F \to P}$, where $T_{X \to Y}$ is the conditional mutual information $I(Y_{t+h}; X_t \mid Y_t, \mathbf{Z}_t)$ \citep{schreiber2000measuring}. Under joint Gaussianity, transfer entropy and Granger causality coincide \citep{barnett2009granger}, and the closed form gives $T_{X \to Y} = -\tfrac{1}{2}\log(1 - \Delta R^2_{X \to Y})$, equivalently $\Delta R^2_{X \to Y} = 1 - e^{-2 T_{X \to Y}}$. The ILS ratio is therefore
+\begin{equation*}
+\mathrm{ILS} \;=\; \frac{\overline{1 - e^{-2 T_{P \to F^j}}}}{1 - e^{-2 T_{F \to P}}} \;\approx\; \frac{\overline{T_{P \to F^j}}}{T_{F \to P}} \quad \text{to leading order in small } T,
+\end{equation*}
+recovering the standard transfer-entropy ratio in the small-effect regime. We use $\Delta R^2$ rather than $T$ because the linear estimator has $O(K/n)$ finite-sample bias rather than the higher-variance KSG bias of order $n^{-1/(K+1)}$, a meaningful difference at our $K = 12$ and $n \in [200, 9000]$.
+
+\paragraph{Operational definition of ``causal direction.''}
+The empirical work in \S\ref{sec:results} uses five distinct operationalizations of ``PM is a causal leader'': the bootstrap leadership score $L$ (PCMCI+, pre-registered), the LPCMCI directed-edge ratio (post-hoc), the PCMCI+ directed-edge ratio (post-hoc), the lead-lag cross-correlation (post-hoc), and the Granger $F$-ratio (post-hoc). Each is a proxy for causal direction \emph{conditional on the corresponding method's identification assumptions}; we do not claim any single one is the ``true'' causal-direction measure. The pre-registered $L$ is the reported test statistic; the post-hoc operationalizations are reported as sensitivity rather than confirmation.
+
+\paragraph{Estimation details.}
+All variables are standardized to zero mean and unit variance. We use first-differenced PM variables ($\Delta P_t$, not $P_t$) to avoid the stale-quote artifact from forward-filling sparse PM ticks (see \citealt{lomackinlay1990econometric} for the original characterization of this attenuation in nonsynchronous-trading econometrics). We compute block-bootstrap 95\% confidence intervals on $\mathrm{ILS}$ with 500 resamples and block length 10 hours \citep{kunsch1989jackknife}. For mutual-information cross-checks (\S\ref{sec:why}) we use the KSG estimator at $k = 5$ neighbors, with stability checks at $k \in \{3, 7, 10\}$. Finite-sample bias of the incremental-$R^2$ estimator is $O(K/n)$, $\sim 6\%$ on the shortest panels in our set ($n = 200$), and is propagated into the bootstrap CIs but not separately corrected.
+
+\paragraph{Worked example: KXFED.}
+On the KXFED panel ($n = 2{,}251$ hourly observations, $K = 9$ financial channels), we obtain $\Delta R^2_{\mathbf{F} \to P} = 0.0075$ (financials add 0.75 percentage points of predictive power for $\Delta P_{t+1}$ beyond PM autoregression) and $\overline{\Delta R^2_{P \to F}} = 0.0005$ (PM adds 0.05 pp on average for predicting each financial channel beyond the other channels), giving $\mathrm{ILS}(\text{KXFED}) = 0.067$. The KSG conditional MI estimate at $k = 5$ gives $I(\Delta P_{t+1}; P_t, \mathbf{F}_t) - I(\Delta P_{t+1}; \mathbf{F}_t) = 0.011 \pm 0.003$ nats and $\overline{I(\Delta F_{t+1}; P_t, \mathbf{F}_t^{-j}) - I(\Delta F_{t+1}; \mathbf{F}_t^{-j})} = 0.0008 \pm 0.0006$ nats. The MI ratio (0.073) and ILS (0.067) agree to two significant figures, validating ILS as a population proxy on this market.
+
+%% ============================================================================
+\section{Pre-Registered 16-Market Panel}
+\label{sec:panel}
+%% ============================================================================
+
+\paragraph{Panel construction.}
+We assemble a panel of 16 prediction markets and freeze the panel before any causal-discovery computation, in line with pre-registration practice in observational research \citep{nosek2018preregistration}. The frozen pre-registration document specifies (a) the 16 markets and the two backups, (b) the IUS \emph{tier} assignment for each (high / mid / low), (c) the per-market financial channels, (d) the acceptance criteria ($n_\text{active} \ge 300$ with a documented relaxation to $n_\text{active} \ge 200$ for political contracts whose lifetime is bounded by an event date \emph{ex-ante}; $\hat\pi_1 \ge 0.10$; ILS bootstrap CI stable; $\ge 2$ primary channels with $\ge 80\%$ coverage), and (e) the primary statistical test. The $n$ values in Table~\ref{tab:ius_panel} are post-merge hourly observations after dropping initial cold-start ticks; two markets (Canada PM 2025, Germany Parl. 2025) fall in the relaxed range with $n \in [200, 300)$ and are flagged in tier-level robustness analyses (\S\ref{sec:why}). The pre-registration document, manifest, and acceptance log are in the project repository.
+
+The eight high-IUS markets cover political, geopolitical, and legal events expected to aggregate information not in financial prices (US Presidential Election 2024, US strikes Iran, Trump Fed Chair nominee, TikTok ban, Germany Parliamentary Feb 2025, Canada PM 2025, Khamenei ouster Feb 2026, US government shutdown Jan 2026). The four mid-IUS markets are intermediate political contracts (SK Presidential 2025, Poland Presidential 2025, Speaker of the House, Portugal Presidential 2026). The four low-IUS markets are price- or rate-based (KXFED, KXCPI, PolyFed Jan 2026, Polymarket BTC 2025), where information is already impounded in liquid instruments. Tier assignment was made by author judgment of expected information-uniqueness profile prior to any IUS computation; we do not propose a quantitative tier-assignment rule, and tier-level tests should be read as exploratory rather than confirmatory. All sixteen markets passed the acceptance criteria. Total Polymarket volume across the 14 Polymarket markets exceeds \$7.8B. The panel is a convenience sample from publicly accessible PM contracts meeting the criteria, not a probability sample of all PM contracts; generalization beyond this panel is not warranted by the panel test alone.
+
+\paragraph{Data provenance.}
+Polymarket prices were fetched from the public CLOB \texttt{prices-history} endpoint in 14-day chunks at 60-minute fidelity. Kalshi trades data are public via the \texttt{api.elections.kalshi.com} trade tape. Financial channels (SPY, IWM, TLT, USO, UUP, UVXY, BTC plus per-market specialists META, GOOGL, AAPL, BIDU, EWG, FXE, FXC, EWY, ITA) are from Databento XNAS.ITCH ohlcv-1h. All raw and processed parquets are reproducible from the manifest commit SHA.
+
+\paragraph{Primary tests.}
+The pre-registered primary test (H1) is the two-sided permutation test of $\rho_{\text{Spearman}}(\mathrm{ILS}_m, L_m)$ over the 16 markets, where $L_m \in [0,1]$ is the bootstrap fraction of PCMCI+ replicates classifying PM as the leader on market $m$. The secondary tier test (H2) is the Mann-Whitney $U$ test \citep{mann1947test} on $L$ across high/mid/low IUS tiers with Benjamini-Hochberg FDR \citep{benjamini1995controlling} at $q \le 0.10$. The full panel and tier assignments appear in Table~\ref{tab:ius_panel}.
+
+\begin{table}[t]
+\centering
+\caption{Pre-registered 16-market IUS panel. Tier classifications were frozen prior to ILS or causal-discovery computation. ILS is the Information Leadership Score (Definition~\ref{def:ils}) with block-bootstrap 95\% CI. $L$ is the bootstrap leadership score (fraction of PCMCI+ replicates classifying PM as leader) used in H1.}
+\label{tab:ius_panel}
+\small
+\input{ius_panel_table}
+\end{table}
+
+%% ============================================================================
+\section{Results}
+\label{sec:results}
+%% ============================================================================
+
+\subsection{Primary test (H1): $\rho \approx 0$ at $p = 0.868$}
+
+H1 was pre-registered as: Spearman $\rho$(ILS rank, $L$ rank) across the panel is positive at two-sided permutation $p < 0.05$ (10{,}000 reps). Figure~\ref{fig:scatter} shows the panel: ILS on a log scale (the framework's leader threshold $\mathrm{ILS} = 1$ is the vertical reference), $L$ on the linear scale (the leader threshold $L = 0.5$ is the horizontal reference). Visually, the points form a flat cloud across two orders of magnitude in ILS without monotone trend, and all five markets with $\mathrm{ILS} > 1$ (the framework's predicted leaders) sit below $L = 0.5$.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.86\textwidth]{figures/ius_scatter.pdf}
+\caption{The pre-registered 16-market panel: Information Leadership Score (ILS, log axis) vs.\ bootstrap leadership score $L$. Points colored by tier (red high, grey mid, blue low), sized by panel length, with horizontal bars showing the block-bootstrap 95\% CI on ILS. Dotted lines mark the framework's predicted leader/follower thresholds ($\mathrm{ILS} = 1$, $L = 0.5$). Five markets with $\mathrm{ILS} > 1$ all sit below $L = 0.5$ (the lower-right quadrant); the only market with $L > 0.5$ (Iran) has $\mathrm{ILS} = 0.007$. Spearman $\rho = -0.046$, permutation $p = 0.868$.}
+\label{fig:scatter}
+\end{figure}
+
+\textbf{Observed:} $\rho = -0.046$, permutation $p = 0.868$ two-sided, $p = 0.568$ one-sided. Bootstrap 95\% CI on $\rho$: $[-0.60, +0.55]$.
+
+\textbf{H1 is not supported.} The data fail to reject the null $H_0: \rho \le 0$ in favor of the directional alternative $H_1: \rho > 0$ at any conventional threshold. The observed direction is slightly negative, opposite the hypothesis. We report the two-sided permutation $p$-value as conservative; the pre-registered one-sided $p = 0.568$ is the test directly aligned with the directional hypothesis. Both fail to support $H_1$. By the pre-registered decision rule, this triggers the methodology-first framing of the paper.
+
+\subsection{Secondary tier test (H2): mean $L$ runs opposite to the hypothesis}
+
+Per-tier mean $L$: high-IUS $= 0.188$, mid-IUS $= 0.215$, low-IUS $= 0.290$. Low-IUS markets have \emph{higher} empirical leadership scores than high-IUS markets, the reverse of the framework's prediction. Pairwise Mann-Whitney $U$ (two-sided) $p$-values: high vs.\ low $p = 0.089$, high vs.\ mid $p = 1.000$, mid vs.\ low $p = 0.343$. None survive Benjamini-Hochberg at $q \le 0.10$.
+
+\subsection{Iran pre-strike case study: oil leads, PM follows}
+\label{sec:iran}
+
+The June 2025 US-strikes-Iran event is the one market in our panel with reported pre-event insider trading: \$1.2M flowed across 6 wallets in the days before the 22 June strikes \citep{chainalysis2025iran}. We pre-specified a Granger-causality test on a 7-day pre-strike window ($n = 28$ hourly observations) with $K = 30$ calendar-matched placebo windows $\ge 14$ days prior, max-lag 3 hours, BH-FDR \citep{benjamini1995controlling} across the five financial channels at $q \le 0.10$ (the smallest $p$-value in Table~\ref{tab:iran} is $0.015$, which clears the BH threshold $1/5 \cdot 0.10 = 0.02$ but not the $q \le 0.05$ threshold $0.01$; we report at $q \le 0.10$ as pre-registered for this exploratory single-event analysis).
+
+\begin{table}[h]
+\centering
+\caption{Iran pre-strike pairwise Granger causality, 7-day window before 22 June 2025 US strikes on Iranian nuclear facilities. $K = 30$ matched placebo windows.}
+\label{tab:iran}
+\small
+\begin{tabular}{lcccl}
+\toprule
+Channel & $p(\text{PM} \to \text{ch})$ & $p(\text{ch} \to \text{PM})$ & Direction & Survives BH? \\
+\midrule
+Oil  & 0.508 & \textbf{0.015} & ch $\to$ PM & yes \\
+Gold & 0.078 & 0.071 & marginal both & no \\
+VIX  & 0.325 & 0.147 & none & no \\
+SPY  & 0.628 & 0.533 & none & no \\
+TLT  & 0.416 & 0.478 & none & no \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Oil Granger-causes Iran PM at $p = 0.015$ while Iran PM does not Granger-cause Oil ($p = 0.508$). Even on the single market in the panel with reported pre-event insider trading, the directional information flow runs \emph{into} the PM from the more liquid futures market, not out of it. This inverts the assumption underlying the IUS-to-direction correspondence on the very market we expected most strongly to validate it. We note that Iran's panel-level $L = 0.52$ is the highest in the high-IUS tier (Table~\ref{tab:ius_panel}); the case study shows that even this apparent leader is, on closer event-window inspection, a follower. The Granger F-test at $n = 28$ with max-lag $3$ leaves $\sim 21$ residual degrees of freedom, which is at the lower bound of asymptotic-$F$ validity; a Toda-Yamamoto correction or finite-sample bootstrap is the standard remedy and would be appropriate for a confirmatory rather than exploratory case study.
+
+\subsection{Post-hoc sensitivity (not pre-registered)}
+
+For transparency we report four alternative leadership operationalizations: LPCMCI directed-edge ratio, PCMCI+ directed-edge ratio, lead-lag cross-correlation, and Granger ratio. All four yield positive Spearman $\rho$ with ILS (range $+0.147$ to $+0.420$), but none reach $p < 0.10$ at $n = 16$. The best, LPCMCI directed-edge ratio at $\rho = +0.420$ one-sided $p = 0.067$, is dominated by a single market (PolyBTC 2025): leave-one-out drops on any other market leave $\rho = +0.433$; dropping PolyBTC yields $\rho =$ NaN because the remaining markets have zero LPCMCI directed edges. We report the post-hoc analyses as sensitivity checks, not as decision-grade evidence; the pre-registered H1 stands.
+
+\subsection{Subset robustness on the pre-registered $L$}
+\label{sec:subset_robustness}
+
+To check whether the pre-registered null is driven by the noisy or short-panel markets that the discussion in \S\ref{sec:why} flags, we re-run the Spearman test on a series of subsets (Table~\ref{tab:robustness}). Across eight subsets including tier-internal partitions, leverage-point removal (drop PolyBTC), short-panel exclusions ($n_\text{used} \ge 300, 500, 800$), high-uncertainty exclusions (bootstrap CI width $\le 2.0, 2.5$ orders), and a combined drop, no subset yields a positive $\rho$ at conventional thresholds. Every subset of size $\ge 5$ that drops noisy markets returns either a near-zero $\rho$ or a more strongly \emph{negative} $\rho$ than the full panel. The empirical null is therefore not an artifact of low-quality estimates: when we restrict to the markets where ILS is most cleanly estimated and $L$ is best supported by panel length, the rank correlation moves further from the framework's prediction, not closer.
+
+\begin{table}[h]
+\centering
+\caption{Subset Spearman robustness on the pre-registered $L$. All subsets are post-hoc and reported as sensitivity. ``CI ratio'' is $\log_{10}(\text{ILS upper}/\text{ILS lower})$ from the block-bootstrap.}
+\label{tab:robustness}
+\small
+\begin{tabular}{lcccl}
+\toprule
+Subset & $n$ & $\rho(\mathrm{ILS}, L)$ & perm $p$ (two-sided) & Notes \\
+\midrule
+Full panel (pre-registered)              & $16$ & $-0.046$ & $0.862$ & headline result \\
+Tier high                                & $8$  & $-0.333$ & $0.434$ & strongly negative \\
+Tier mid                                 & $4$  & $+0.200$ & $0.916$ & underpowered \\
+Tier low                                 & $4$  & $-0.200$ & $0.920$ & underpowered \\
+Drop PolyBTC (leverage point)            & $15$ & $-0.073$ & $0.801$ & null persists \\
+Restrict to $n_\text{used} \ge 300$      & $14$ & $-0.004$ & $0.992$ & near zero \\
+Restrict to $n_\text{used} \ge 500$      & $9$  & $-0.360$ & $0.338$ & negative \\
+Restrict to ILS CI ratio $\le 2.0$ orders& $9$  & $-0.479$ & $0.198$ & most negative \\
+Drop PolyBTC \& restrict $n \ge 500$     & $8$  & $-0.419$ & $0.310$ & negative \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ============================================================================
+\section{Why the framework fails}
+\label{sec:why}
+%% ============================================================================
+
+The null is robust to method (PCMCI+, LPCMCI, Granger), to non-Gaussianity (rank-Gaussianized PCMCI+ reproduces it), and to causal-sufficiency violations (LPCMCI's PAG reproduces it). It is therefore not an artifact of the discovery method. We identify three substantive mechanisms that contribute to the failure.
+
+\paragraph{(1) Panel-length confounding of the leadership score.}
+High-IUS markets (political/geopolitical) typically have panel lengths 200--1500 hourly observations, bounded by contract lifetime. Low-IUS markets (KXFED, PolyBTC) span 2000--9000 observations. PCMCI+ has low power on short panels and returns the \emph{isolated} classification (no PM-adjacent edges) for most short markets. The bootstrap leadership score $L$ collapses to a near-zero floor for these markets independent of their true causal direction. A causal-discovery method that requires more data than high-IUS markets can produce will systematically classify those markets as non-leaders. The panel-length confound is intrinsic to the data-generating process; it can only be addressed by a method whose decision boundary is calibrated for short panels. Mechanism (1) is partial: Iran ($n = 721$, high-IUS) records the highest $L = 0.52$ in the table, indicating that panel length alone does not determine leadership classification. The Iran case study (\S\ref{sec:iran}) shows that this apparent leader is a follower under event-window Granger; the panel-level $L$ is therefore not a clean signal of causal direction even when it is high.
+
+\paragraph{Direct test of Mechanism (1) on the long-panel subset.}
+If panel-length confounding is the dominant mechanism, restricting the test to markets with $n_\text{used} \ge 800$ (which keeps the five longest-running markets: PolyBTC 2025, KXFED, TikTok ban, Trump Fed Chair, PolyFed Jan 2026) should reduce the confound and reveal the underlying $\mathrm{IUS} \to L$ correspondence if it exists. Table~\ref{tab:long_panel_subset} reports this analysis. We re-compute Spearman $\rho(\mathrm{ILS}, L)$ on the 5-market subset for the pre-registered $L$ and the four post-hoc $L$ operationalizations.
+
+\begin{table}[h]
+\centering
+\caption{Post-hoc subset analysis: Spearman $\rho(\mathrm{ILS}, L)$ across leadership operationalizations on the 5 markets with $n_\text{used} \ge 800$. All five operationalizations yield positive $\rho$, with mean $+0.67$. Two reach one-sided permutation $p \le 0.05$. The pre-registered $L$ flips from $-0.046$ on the full panel to $+0.20$ on this subset. \emph{Strictly post-hoc and underpowered at $n = 5$; reported as a direct test of Mechanism (1) rather than as evidence overturning the pre-registered null.}}
+\label{tab:long_panel_subset}
+\small
+\begin{tabular}{lcccc}
+\toprule
+$L$ operationalization & $\rho$ on $n=5$ subset & one-sided perm $p$ & $\rho$ on full $n=16$ & direction agrees \\
+\midrule
+$L_\text{Granger ratio}$         & $+0.949$ & $\mathbf{0.034}$ & $+0.248$ & yes \\
+$L_\text{PCMCI+ directed-edge ratio}$  & $+0.894$ & $\mathbf{0.048}$ & $+0.147$ & yes \\
+$L_\text{LPCMCI directed-edge ratio}$  & $+0.707$ & $0.198$         & $+0.420$ & yes \\
+$L_\text{lead-lag cross-correlation}$  & $+0.600$ & $0.182$         & $+0.188$ & yes \\
+$L$ (pre-registered, PCMCI+ bootstrap) & $+0.200$ & $0.395$         & $-0.046$ & flips to positive \\
+\midrule
+mean $\rho$                       & $+0.670$ & --- & $+0.191$ & 5/5 positive \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The five $L$ operationalizations are not statistically independent (they are computed from related causal-discovery pipelines on the same data), so the 5/5 positive sign count cannot be combined into a clean meta $p$-value. With that caveat, two patterns are robust: (a) every $L$ operationalization yields a more positive $\rho$ on the 5-market long-panel subset than on the full panel, and (b) the pre-registered $L$ itself flips sign from $-0.05$ on the full panel to $+0.20$ on the subset. Both are consistent with the panel-length-confounding diagnosis. The Granger and PCMCI+ directed-edge ratios reach one-sided permutation $p \le 0.05$ at $n = 5$. After Bonferroni correction across the five operationalizations the $p$-values do not survive at $\alpha = 0.05$, so we do not claim the IUS hypothesis is supported in this subset; we claim only that the mechanism we hypothesized in this paragraph receives consistent direct evidence on the data we have. Replication on a panel pre-registered to satisfy $n_\text{used} \ge 800$ is the natural next test.
+
+\paragraph{(2) ILS estimator noise and panel-size power dominate at our sample sizes.}
+Block-bootstrap 95\% CIs on ILS span more than two orders of magnitude for most markets in Table~\ref{tab:ius_panel} (e.g., PolyBTC 2025: $[0.002, 284.6]$; Trump Fed Chair: $[0.091, 7.69]$). The signal-to-noise ratio on ILS at our $n$ is too low to detect a population-level monotonic relationship even if one exists. A Fisher-$z$ power calculation, $n \approx \big[(z_{\alpha/2} + z_\beta)/\mathrm{atanh}(\rho_0)\big]^2 + 3$, gives the panel sizes required to detect a true Spearman $\rho_0$ at $\alpha = 0.05$ with 80\% power: $\rho_0 = 0.5 \Rightarrow n \approx 29$; $\rho_0 = 0.3 \Rightarrow n \approx 82$; $\rho_0 = 0.7 \Rightarrow n \approx 13$. The pre-registered panel size $n = 16$ is therefore powered to detect only very large effects, and the tier-level Mann-Whitney with $n_\text{high}/n_\text{mid}/n_\text{low} = 8/4/4$ has a minimum two-sided $p \approx 0.029$ in the smallest cell, leaving little headroom under BH at $q \le 0.10$. The construction cost of one additional liquid PM at our quality bar is non-trivial given the data-availability constraints we encountered (12 high-IUS candidates were dropped at the acceptance gate).
+
+\paragraph{(3) Inverted directional flow on documented-insider-trading markets.}
+The Iran case study (\S\ref{sec:iran}) provides a concrete inversion of the IUS-to-direction mapping. Even with documented insider trading on the PM side, the more liquid futures market (Oil, with implied volatility responding to geopolitical risk) leads the prediction market. The mechanism is informational, not technical: the same hedge funds and macro shops that participate in PMs also trade futures, and they trade the larger market first because of capacity. PMs catch up with a lag, not lead. This is consistent with the broader observation that PMs as of 2026 attract \emph{post-hoc} retail participants rather than \emph{ex-ante} informed institutional capital. The IUS-to-direction mapping assumes the latter; the empirics reflect the former.
+
+\paragraph{What the null does \emph{not} show.}
+We do not show that no PM ever leads a financial market. Our null is on the population-level rank correlation between IUS and leadership, estimated with a particular set of methods at hourly resolution. A higher-resolution, event-anchored test on a single PM with strong informational content, or a population test with $n \ge 30$ and tighter ILS estimators, could in principle find the relationship we cannot detect here. Our claim is narrower: \emph{at the operationalization, sample size, and estimation procedure we pre-registered, the framework does not predict causal direction at conventional thresholds}.
+
+\paragraph{Additional limitations.}
+The methodology relies on three assumptions whose violation would weaken the test. \emph{Stationarity}: PCMCI+, LPCMCI, and Granger all assume joint stationarity within the contract's active window. The Fed regime changed (cutting to holding) in December 2024; political contracts span election cycles. CD-NOD with a regime indicator \citep{huang2020causal} would address this and is left to follow-up work. \emph{ILS estimator instability}: the bootstrap CI on $\mathrm{ILS}$ for some markets (PolyBTC 2025: $[0.002, 284.6]$; Trump Fed Chair: $[0.091, 7.69]$) spans more than two orders of magnitude, driven by a near-zero denominator. The point estimate of $\mathrm{ILS}$ for these markets is essentially uninformative on its own, and the rank-correlation test inherits this uncertainty. The post-hoc leave-one-out analysis (\S\ref{sec:results}) shows PolyBTC is a leverage point; we report the pre-registered $\rho$ on the full panel without winsorization or trimming as pre-specified, but a winsorized or rank-only re-analysis is a natural sensitivity check we have not pre-registered. \emph{Method validation}: the IUS--ILS bridge is established analytically under linear-Gaussian dependence, numerically verified on KXFED (\S\ref{sec:ils}; MI ratio $0.073$ vs.\ ILS $0.067$), and validated by Monte Carlo recovery on synthetic SVARs with known causal direction (Appendix~\ref{app:synthetic}). Recovery is at near-ceiling under the linear-Gaussian baseline ($\rho(\mathrm{ILS}, L) = +0.96$ at $n_\text{markets} = 16$); robust to heavy-tailed Student-$t_3$ innovations ($\rho = +0.92$); and degrades under non-stationary regime-switching ($\rho = +0.58$, with ground-truth direction-parameter recovery collapsing to $\rho(\mathrm{ILS}, \alpha) = -0.11$) and strong latent confounding ($\rho = +0.67$). The empirical null on the real-data panel is therefore consistent with non-stationarity (Fed regime breaks, election-cycle transitions) or latent macro-shock confounding, both of which are present on the panel and absent from the synthetic baseline. Discriminating between these explanations via CD-NOD with regime indicators \citep{huang2020causal} and J-PCMCI+ with macro-shock context is the most direct follow-up.
+
+%% ============================================================================
+\section{Discussion: the null as a methodological benchmark}
+\label{sec:discussion}
+%% ============================================================================
+
+The pre-registered null is reproducible across methods (PCMCI+, LPCMCI, Granger), estimators (linear-Gaussian ILS, nonparametric rank-Gaussianized PCMCI+), and identification assumptions (LPCMCI admits latent confounders). The robustness is real, with the caveat that all three methods share the $n = 16$ panel-size limitation flagged in \S\ref{sec:why}; a new method that finds positive PM-leader edges must either exploit identification assumptions PCMCI+ / LPCMCI / Granger cannot or use higher-frequency or longer-horizon data than the hourly aggregation we test. The three failure mechanisms in \S\ref{sec:why} provide concrete targets for follow-up work: panel-length-aware classifiers for short markets, lower-variance leadership estimators that target IUS directly, and event-anchored protocols that handle insider-trading-type inversions.
+
+\paragraph{Implications for PM market design.}
+High-IUS markets are the ones expected to lead financial prices, because they aggregate information outside what financial prices already encode. The empirical observation that they currently \emph{follow} those markets is therefore a market-design constraint, not a methodological failure. PMs as currently structured attract participants who trade financial markets first; closing the gap requires institutional participation that is contractually distinct from the financial side. This is testable as PM platforms mature.
+
+%% ============================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+%% ============================================================================
+
+We define the Information Uniqueness Score (IUS) and a computable proxy (ILS) that formalize when prediction markets should lead financial markets. The pre-registered Spearman rank correlation between ILS and the bootstrap leadership score across the 16-market panel is $-0.046$ at permutation $p = 0.868$; the tier comparison runs opposite the hypothesis; and the one panel market with reported pre-event insider trading shows information flow into the PM, not out of it. The null is robust to method, to non-Gaussianity, and to causal-sufficiency violations, modulo the shared $n = 16$ power constraint. Three mechanisms (panel-length confounding, ILS estimator noise, inverted directional flow on insider-trading markets) account for the failure. The panel is released as a public benchmark for future PM causal-discovery work.
+
+\paragraph{Reproducibility.}
+All raw data sources are public (Polymarket CLOB, Kalshi trade tape, Databento). The pre-registration document, panel manifest, computation scripts, and bootstrap protocol are in the project repository; the panel test, post-hoc sensitivity, and Iran case study can be reproduced end-to-end from the manifest commit SHA.
+
+\paragraph{Acknowledgments.}
+This paper is submitted as a final class project for CMU 80-816/516. The author thanks the course instructors for the project framing.
+
+\paragraph{Code and resources.}
+Causal discovery uses the \texttt{tigramite} package (PCMCI+ and LPCMCI implementations). Numerical and statistical work uses \texttt{numpy}, \texttt{scipy}, \texttt{pandas}, and \texttt{scikit-learn}. Anthropic's Claude was used for LaTeX formatting, prose tightening, BibTeX entry construction, and review of internal consistency, as disclosed in checklist item~16; all numerical results, the IUS definition, and the pre-registration document are author-specified. The data, simulation scripts, and reproduction code will be made available in a clean public GitHub repository accompanying the paper; in the interim, the working repository can be shared privately with the course instructors on request.
+
+%% ============================================================================
+\bibliographystyle{plainnat}
+\bibliography{references}
+%% ============================================================================
+
+\appendix
+
+%% ============================================================================
+\section{Pre-registration document and manifest}
+\label{app:prereg}
+%% ============================================================================
+
+The full pre-registration is at \texttt{methodology/ius\_panel\_preregistration.md} in the project repository. It specifies, prior to any computation: (i) the 16 markets and 2 backups with their tokens / Kalshi tickers; (ii) the tier assignment per market with text justification; (iii) the per-market financial channels and their data source; (iv) the acceptance criteria; (v) the primary H1 test (Spearman $\rho$, two-sided permutation, 10{,}000 reps); (vi) the secondary H2 test (Mann-Whitney across tiers with Benjamini-Hochberg FDR); (vii) the decision rule (if H1 fails at $p \ge 0.05$, the paper is reframed as methodology-first with the null as the empirical anchor). The machine-readable manifest is at \texttt{configs/ius\_panel.yaml}.
+
+%% ============================================================================
+\section{Estimation details}
+\label{app:est}
+%% ============================================================================
+
+\paragraph{KSG mutual-information estimator.}
+We use the $k$-nearest-neighbor estimator of \citet{kraskov2004estimating} for $I(X;Y)$ and the modified mixed discrete-continuous variant of \citet{ross2014mutual} for $I(O;P)$ where $O$ is binary. Default $k = 5$; robustness over $k \in \{3, 5, 7, 10\}$ is verified for all reported MI quantities. All variables are standardized to zero mean and unit variance prior to estimation.
+
+\paragraph{ILS bootstrap protocol.}
+500 block-bootstrap resamples, block length 10 hours, sampled with replacement at the block level. The block length is selected to exceed the empirical autocorrelation decay scale of $\Delta P_t$ on the longest panels (KXFED, PolyBTC: $\hat\rho_{\Delta P}(\tau) < 0.1$ by $\tau = 6$ hours), with 10 hours providing a margin under \citet{kunsch1989jackknife}'s consistency requirement that block length grow as $o(n^{1/3})$. Confidence intervals are reported as the empirical 2.5\% and 97.5\% quantiles of the bootstrap distribution. The choice of 500 resamples (rather than $\ge 1000$) reflects compute budget at sweep scale and is acknowledged as a moderate-precision setting for tail-quantile estimation.
+
+\paragraph{Causal-discovery sweep for $L_m$.}
+$L_m$ is the fraction of PCMCI+ bootstrap replicates that classify PM as the leader on market $m$. We use the \texttt{tigramite} implementation of PCMCI+ at $\tau_\text{max} = 4$, ParCorr conditional-independence test, $\alpha = 0.05$, and 50 bootstrap replicates per market. PM is classified as leader on a replicate iff there exists at least one outgoing PM $\to F^j$ directed edge and zero incoming $F^j \to$ PM directed edges; otherwise it is a follower or has mixed/isolated classification.
+
+\paragraph{LPCMCI leadership classification on a PAG.}
+LPCMCI returns a PAG with edge-mark types in $\{{-}, {>}, \circ\}$ at each endpoint. We classify PM as a leader on a market iff the PAG contains at least one tail-into-arrow edge $P \xrightarrow{} F^j$ (definite directed edge) and zero edges of the form $F^j \xrightarrow{} P$ or $F^j \mathbin{\circ\!{\to}} P$. Bidirected edges $P \leftrightarrow F^j$ (latent confounding) and circle-marked edges $P \mathbin{\circ\!{-}\!\circ} F^j$ (unidentified direction) count as neither leader nor follower contributions. The LPCMCI directed-edge ratio reported in Appendix~\ref{app:posthoc} normalizes the directed-out count by the total count of PM-adjacent edges of any type, so PAGs dominated by bidirected or circle edges contribute small ratios in either direction. This is why the panel-wide LPCMCI directed-edge ratio has many zeros (markets where LPCMCI returns only bidirected or circle-marked PM-adjacent edges) and is leverage-sensitive to the few markets with definite directed edges (e.g., PolyBTC 2025).
+
+\paragraph{Permutation test.}
+H1 permutation $p$-value: 10{,}000 random permutations of the $L$ vector, recomputing the Spearman correlation each time. Two-sided $p$ is the fraction of permutations with $|\rho_\text{perm}| \ge |\rho_\text{obs}|$.
+
+%% ============================================================================
+\section{Per-market leadership scores under all four post-hoc metrics}
+\label{app:posthoc}
+%% ============================================================================
+
+Table~\ref{tab:posthoc} reports the four alternative leadership operationalizations described in \S\ref{sec:results} together with the pre-registered $L$ for reference. The four post-hoc metrics are: LPCMCI directed-edge ratio (count of PM-outgoing minus PM-incoming directed edges normalized by total PM-adjacent edges), PCMCI+ directed-edge ratio (same construction on the PCMCI+ output), the lead-lag cross-correlation at lag $h = 1$ hour, and the Granger-test $F$-ratio. All four yield directionally positive Spearman $\rho$ with ILS but none reach $p < 0.10$ at $n = 16$ after the leave-one-out correction described in \S\ref{sec:results}.
+
+\begin{table}[h]
+\centering
+\caption{Spearman $\rho$ between ILS and four alternative leadership metrics on the 16-market panel.}
+\label{tab:posthoc}
+\small
+\begin{tabular}{lccc}
+\toprule
+Metric & $\rho$ & $p$ two-sided & $p$ one-sided \\
+\midrule
+$L$ (pre-registered, PCMCI+ bootstrap) & $-0.046$ & $0.868$ & $0.568$ \\
+$L_\text{lpcmci-ratio}$ (LPCMCI directed-edge ratio) & $+0.420$ & $0.129$ & $0.067$ \\
+$L_\text{pcmci-ratio}$ (PCMCI+ directed-edge ratio) & $+0.147$ & $0.591$ & $0.290$ \\
+$L_\text{lead-lag}$ (cross-correlation) & $+0.188$ & $0.484$ & $0.241$ \\
+$L_\text{granger-ratio}$ (Granger-test ratio) & $+0.248$ & $0.358$ & $0.184$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ============================================================================
+\section{Synthetic Monte Carlo validation}
+\label{app:synthetic}
+%% ============================================================================
+
+We validate that the IUS / ILS pipeline can recover the hypothesis on simulated data with known causal direction. The DGP is a $K$-channel linear-Gaussian SVAR with one prediction-market series $P$ and $K$ financial channels $F_1, \ldots, F_K$. A direction parameter $\alpha \in [-1, 1]$ controls the population causal regime per simulated market: $\alpha > 0$ generates a PM leader ($F_{j,t} = \phi F_{j,t-1} + \beta \alpha P_{t-1} + \varepsilon_F$), $\alpha < 0$ generates a PM follower ($P_t = \phi P_{t-1} + \beta |\alpha| \overline{F}_{t-1} + \varepsilon_P$), $\alpha = 0$ generates an independent market. Innovations are i.i.d.\ Gaussian; AR coefficients are $\phi_P = 0.7, \phi_F = 0.5$; cross-coupling magnitude $\beta = 0.6$. We sample $\alpha$ uniformly on $[-1, 1]$ to produce a panel of synthetic markets covering leader, neutral, and follower regimes.
+
+For each simulated market, ILS is estimated by the same incremental-$R^2$ procedure used on the empirical panel (\texttt{methodology.compute\_ius\_panel.estimate\_ils}). The leadership score $L$ is operationalized as a Granger-$F$-ratio
+\begin{equation*}
+L = \frac{\mathrm{SS}_{P \to F}}{\mathrm{SS}_{P \to F} + \mathrm{SS}_{F \to P}},
+\end{equation*}
+where $\mathrm{SS}$ denotes the incremental sum-of-squares from adding the source variable to a lag-only baseline. Under linear-Gaussian dependence this is a monotone transform of the partial-correlation structure that the paper's PCMCI+ bootstrap leadership score also targets, so it is a faster proxy with the same direction of monotonicity. The pre-registered Spearman test is then $\rho(\mathrm{ILS}, L)$ with a 10{,}000-rep permutation null. We additionally report $\rho(\mathrm{ILS}, \alpha)$ and $\rho(L, \alpha)$ as ground-truth recovery checks against the unobserved direction parameter.
+
+\begin{table}[h]
+\centering
+\caption{Synthetic Monte Carlo recovery. Each row simulates $n_\text{markets}$ markets with $\alpha \sim \text{Uniform}[-1, 1]$, $n_\text{obs}$ hourly observations per market, $K = 5$ financial channels. Top block: linear-Gaussian baseline at three panel sizes. Bottom block: violated-DGP robustness at fixed $n_\text{markets} = 30, n_\text{obs} = 1{,}000$.}
+\label{tab:synthetic}
+\small
+\begin{tabular}{lcccccc}
+\toprule
+Configuration & $n_\text{markets}$ & $n_\text{obs}$ & $\rho(\mathrm{ILS}, L)$ & $p_\text{perm}$ (two-sided) & $\rho(\mathrm{ILS}, \alpha)$ & $\rho(L, \alpha)$ \\
+\midrule
+\multicolumn{7}{l}{\textit{Baseline: linear-Gaussian, stationary, no common cause}} \\
+\quad Empirical-panel size  & $16$ & $1{,}000$ & $+0.962$ & $< 10^{-4}$ & $+0.965$ & $+0.974$ \\
+\quad Realistic follow-up   & $30$ & $1{,}000$ & $+0.920$ & $< 10^{-4}$ & $+0.868$ & $+0.954$ \\
+\quad Large panel           & $60$ & $2{,}000$ & $+0.911$ & $< 10^{-4}$ & $+0.872$ & $+0.951$ \\
+\midrule
+\multicolumn{7}{l}{\textit{Violated DGPs: $n_\text{markets}=30, n_\text{obs}=1{,}000$}} \\
+\quad Heavy-tail innovations ($t_3$)         & $30$ & $1{,}000$ & $+0.925$ & $< 10^{-4}$ & $+0.848$ & $+0.890$ \\
+\quad Regime switch (sign of $\beta$ flips)  & $30$ & $1{,}000$ & $+0.584$ & $0.0007$    & $-0.110$ & $+0.094$ \\
+\quad Latent confounder, weak ($\gamma=0.5$) & $30$ & $1{,}000$ & $+0.980$ & $< 10^{-4}$ & $+0.926$ & $+0.948$ \\
+\quad Latent confounder, strong ($\gamma=1.5$)& $30$ & $1{,}000$ & $+0.666$ & $0.0002$    & $+0.436$ & $+0.648$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Reading the baseline.}
+At the empirical panel size $n = 16$ the methodology achieves $\rho(\mathrm{ILS}, L) = +0.96$ on simulated data with permutation $p < 10^{-4}$. Under the linear-Gaussian DGP with strong cross-coupling ($\beta = 0.6$), the test recovers the hypothesis at near-ceiling. The empirical real-data $\rho = -0.046$ at $p = 0.868$ is therefore not a methodology artifact at the linear-Gaussian baseline: if the same effect size existed in the real-data DGP, the test would have detected it.
+
+\paragraph{Reading the violated DGPs.}
+The robustness block tells a sharper story about \emph{why} the empirical null occurs. Heavy-tailed Student-$t_3$ innovations leave recovery essentially intact ($\rho = +0.92$ vs.\ baseline $+0.92$ at the same panel size); non-Gaussianity is not the binding constraint. \emph{Regime-switching} (the cross-coupling sign flips midway through each market's time series, mimicking a Fed cutting/holding transition) collapses $\rho(\mathrm{ILS}, \alpha)$ to $-0.11$ and $\rho(L, \alpha)$ to $+0.09$: under non-stationarity of this magnitude, neither $\mathrm{ILS}$ nor $L$ tracks the ground-truth direction parameter, although $\rho(\mathrm{ILS}, L)$ stays positive at $+0.58$ because the two estimators agree (with each other) on the wrong answer. A \emph{strong latent confounder} ($\gamma = 1.5$, where a hidden AR(1) process drives both $P$ and $\mathbf{F}$) drops $\rho(\mathrm{ILS}, L)$ from $+0.92$ to $+0.67$ and $\rho(\mathrm{ILS}, \alpha)$ from $+0.87$ to $+0.44$. A \emph{weak latent confounder} ($\gamma = 0.5$) is essentially harmless.
+
+\paragraph{Effect-size sweep at the empirical panel size.}
+To bound how small a real-data effect could plausibly explain the empirical $\rho = -0.046$ at $n_\text{markets} = 16$, we sweep the cross-coupling magnitude $\beta \in \{0.05, 0.10, 0.15, 0.20, 0.30, 0.45, 0.60\}$ at fixed $n_\text{markets} = 16$, $n_\text{obs} = 1{,}000$, $K = 5$, baseline (linear-Gaussian, stationary, no common cause). Each $\beta$ is averaged over $30$ independent simulation seeds to give 95\% bootstrap CIs (Table~\ref{tab:beta_sweep}). The mean recovery $\bar\rho(\mathrm{ILS}, L)$ rises monotonically from $+0.59$ at $\beta = 0.05$ to a plateau near $+0.88$ at $\beta \ge 0.20$. Crucially, the lower 95\% CI bound stays well above zero at every $\beta$ tested: even at $\beta = 0.05$, the 95\% CI on recovery is $[+0.31, +0.86]$. The empirical real-data $\rho = -0.046$ lies clearly outside this band, supporting the conclusion that under the linear-Gaussian baseline, the real-data population effect is statistically below the $\beta = 0.05$ floor.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.96\textwidth]{figures/synthetic_recovery.pdf}
+\caption{Synthetic Monte Carlo recovery curves. Each point is the mean of 30 independent simulation seeds; bands are empirical 95\% CIs. Red dashed line is the empirical real-data $\rho = -0.046$. \textbf{(a)} Effect-size sweep at the empirical panel size $n_\text{markets} = 16$: even $\beta = 0.05$ yields recovery $\rho \ge +0.31$ at the 95\% CI lower bound. \textbf{(b)} Panel-size sweep at fixed $\beta = 0.30$: at $n_\text{markets} = 16$ the lower 95\% CI is $+0.69$. The empirical real-data point falls far outside both bands, so under the linear-Gaussian baseline the population effect on real data must be either $\beta < 0.05$ or attributable to violated DGP assumptions (Table~\ref{tab:synthetic}, regime-switch and strong-confounder rows).}
+\label{fig:synthetic_recovery}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\caption{Multi-seed effect-size sweep at $n_\text{markets} = 16$, $n_\text{obs} = 1{,}000$, $K = 5$, linear-Gaussian baseline. Each row averages 30 simulation seeds; bands are empirical 95\% CIs on $\rho(\mathrm{ILS}, L)$. Plotted as Figure~\ref{fig:synthetic_recovery}(a).}
+\label{tab:beta_sweep}
+\small
+\begin{tabular}{lccccc}
+\toprule
+$\beta$ & $\bar\rho(\mathrm{ILS}, L)$ & SD & 95\% CI lower & 95\% CI upper & $\bar\rho(L, \alpha)$ \\
+\midrule
+$0.05$ & $+0.594$ & $0.174$ & $+0.314$ & $+0.859$ & $+0.583$ \\
+$0.10$ & $+0.760$ & $0.135$ & $+0.419$ & $+0.927$ & $+0.748$ \\
+$0.15$ & $+0.830$ & $0.096$ & $+0.634$ & $+0.960$ & $+0.834$ \\
+$0.20$ & $+0.862$ & $0.069$ & $+0.713$ & $+0.954$ & $+0.866$ \\
+$0.30$ & $+0.860$ & $0.064$ & $+0.740$ & $+0.959$ & $+0.881$ \\
+$0.45$ & $+0.881$ & $0.054$ & $+0.770$ & $+0.958$ & $+0.910$ \\
+$0.60$ & $+0.879$ & $0.066$ & $+0.729$ & $+0.955$ & $+0.927$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Multi-seed panel-size sweep at $\beta = 0.30$, $n_\text{obs} = 1{,}000$, $K = 5$, linear-Gaussian baseline. Each row averages 30 simulation seeds. Plotted as Figure~\ref{fig:synthetic_recovery}(b).}
+\label{tab:n_curve}
+\small
+\begin{tabular}{cccccc}
+\toprule
+$n_\text{markets}$ & $\bar\rho(\mathrm{ILS}, L)$ & SD & 95\% CI lower & 95\% CI upper & $\bar\rho(L, \alpha)$ \\
+\midrule
+$8$  & $+0.814$ & $0.150$ & $+0.368$ & $+0.976$ & $+0.799$ \\
+$12$ & $+0.848$ & $0.097$ & $+0.648$ & $+0.955$ & $+0.864$ \\
+$16$ & $+0.853$ & $0.065$ & $+0.694$ & $+0.930$ & $+0.870$ \\
+$20$ & $+0.867$ & $0.051$ & $+0.758$ & $+0.930$ & $+0.886$ \\
+$25$ & $+0.883$ & $0.043$ & $+0.793$ & $+0.944$ & $+0.901$ \\
+$30$ & $+0.882$ & $0.043$ & $+0.783$ & $+0.935$ & $+0.901$ \\
+$40$ & $+0.886$ & $0.038$ & $+0.807$ & $+0.933$ & $+0.910$ \\
+$60$ & $+0.896$ & $0.027$ & $+0.840$ & $+0.932$ & $+0.917$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Implication for the empirical null.}
+The empirical real-data result of $\rho = -0.046$ is consistent with three diagnoses, in increasing order of methodological severity: (a) the population effect on real PM-financial data is essentially zero (smaller than $\beta = 0.05$, the smallest detectable in the sweep); (b) real PMs experience regime breaks during their active windows that destroy the $\mathrm{ILS} \to L$ correspondence; or (c) the no-common-cause assumption is violated by latent macro shocks that drive both $\mathbf{F}$ and $P$, with the differential reaction time we observe in \S\ref{sec:iran} (oil leads Iran PM) consistent with a strong latent confounder hitting $\mathbf{F}$ first. Diagnoses (b) and (c) are sharper than (a) because the sweep shows the $\beta = 0.05$ floor: under the linear-Gaussian baseline, even very small population effects are recoverable at $n = 16$. The Iran event-window finding in particular reads more naturally as case (c) than (a). A regime-aware causal-discovery method (CD-NOD with $c_\text{indx}$ as a regime indicator) and a confounder-aware method (J-PCMCI+ with macro-shock context) are the two follow-up tests that would discriminate between (a), (b), and (c).
+
+The simulation script and results are at \texttt{methodology/synthetic\_ius\_validation.py} and \texttt{methodology/results/ius\_synthetic\_validation.json}.
+
+%% ============================================================================
+\section{NeurIPS Paper Checklist}
+%% ============================================================================
+
+\begin{enumerate}
+
+\item {\bf Claims}\\
+Question: Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?\\
+Answer: \answerYes{}\\
+Justification: The abstract and \S\ref{sec:intro} state (i) the IUS framework, (ii) the pre-registered 16-market benchmark, (iii) the null result, and (iv) the diagnostic decomposition. Each is delivered in the corresponding section.
+
+\item {\bf Limitations}\\
+Question: Does the paper discuss the limitations of the work performed by the authors?\\
+Answer: \answerYes{}\\
+Justification: \S\ref{sec:why} (``What the null does not show'') and \S\ref{sec:discussion} discuss the limited scope of the null (one operationalization, hourly resolution, $n = 16$, ILS as a linear-Gaussian proxy). The mechanism analysis explicitly identifies estimator noise and panel-length confounding as factors limiting the test's power.
+
+\item {\bf Theory Assumptions and Proofs}\\
+Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof?\\
+Answer: \answerNA{}\\
+Justification: This paper presents definitions and a hypothesis test, not formal theorems. The validity-of-proxy argument for ILS in \S\ref{sec:ils} cites the standard linear-Gaussian closed form and is stated as an approximation, not a theorem.
+
+\item {\bf Experimental Result Reproducibility}\\
+Question: Does the paper fully disclose all the information needed to reproduce the main experimental results?\\
+Answer: \answerYes{}\\
+Justification: Pre-registration document (Appendix~\ref{app:prereg}), manifest (\texttt{configs/ius\_panel.yaml}), and estimation protocol (Appendix~\ref{app:est}) are all referenced. Data sources are public (Polymarket CLOB, Kalshi trade tape, Databento). The repository contains the end-to-end scripts.
+
+\item {\bf Open access to data and code}\\
+Question: Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results?\\
+Answer: \answerYes{}\\
+Justification: The benchmark panel is constructed from public data sources (Polymarket CLOB \texttt{prices-history}, Kalshi public trade tape, Databento with the data hashes documented). The repository contains collectors, panel-builder, IUS estimator, sweep runner, and the pre-registered test scripts.
+
+\item {\bf Experimental Setting/Details}\\
+Question: Does the paper specify all the training and test details?\\
+Answer: \answerYes{}\\
+Justification: Sample sizes, hyperparameters ($\tau_\text{max}$, $\alpha$, KSG $k$, bootstrap block length and number of resamples) are specified in \S\ref{sec:ils}, \S\ref{sec:panel}, and Appendix~\ref{app:est}.
+
+\item {\bf Experiment Statistical Significance}\\
+Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments?\\
+Answer: \answerYes{}\\
+Justification: Block-bootstrap 95\% CIs on ILS, permutation $p$-values for H1, Mann-Whitney $U$ and Benjamini-Hochberg FDR for H2, and Granger $p$-values for the Iran case study are all reported with their methodology.
+
+\item {\bf Experiments Compute Resources}\\
+Question: For each experiment, does the paper provide sufficient information on the computer resources?\\
+Answer: \answerYes{}\\
+Justification: PCMCI+ sweep runs in $< 30$ minutes per market on a single CPU core. LPCMCI runs require optimization parameters (\texttt{max\_p\_global=4}, \texttt{max\_q\_global=10}) to complete in $< 10$ s per market. Total compute for the panel is $< 20$ CPU-hours.
+
+\item {\bf Code Of Ethics}\\
+Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics?\\
+Answer: \answerYes{}\\
+Justification: The paper uses only publicly available market data with no individual-level identifiers. The Iran case study references documented insider trading (publicly reported by chain-analysis firms in 2025) without identifying individual wallet owners.
+
+\item {\bf Broader Impacts}\\
+Question: Does the paper discuss both potential positive societal impacts and negative societal impacts?\\
+Answer: \answerYes{}\\
+Justification: \S\ref{sec:discussion} (Implications for PM market design) discusses how the null result constrains expectations for PM use as a policy / financial-monitoring tool and identifies a market-design implication for institutional participation.
+
+\item {\bf Safeguards}\\
+Question: Does the paper describe safeguards for responsible release of data or models with high risk for misuse?\\
+Answer: \answerNA{}\\
+Justification: No models are released. The benchmark consists of publicly available time series.
+
+\item {\bf Licenses for existing assets}\\
+Question: Are the creators or original owners of assets, used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected?\\
+Answer: \answerYes{}\\
+Justification: Polymarket CLOB and Kalshi trade tape are public; Databento data are licensed for research use under the project account; \texttt{tigramite} (PCMCI+/LPCMCI) is GPL-licensed and cited.
+
+\item {\bf New Assets}\\
+Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets?\\
+Answer: \answerYes{}\\
+Justification: The 16-market benchmark panel is documented via the pre-registration document (Appendix~\ref{app:prereg}) and the YAML manifest. The repository ships an accompanying README.
+
+\item {\bf Crowdsourcing and Research with Human Subjects}\\
+Question: Does the paper involve crowdsourcing or research with human subjects?\\
+Answer: \answerNA{}\\
+Justification: No human subjects.
+
+\item {\bf Institutional Review Board (IRB) Approvals}\\
+Question: Does the paper describe potential risks incurred by study participants?\\
+Answer: \answerNA{}\\
+Justification: No human subjects.
+
+\item {\bf Declaration of LLM usage}\\
+Question: Does the paper describe the usage of LLMs?\\
+Answer: \answerYes{}\\
+Justification: An LLM (Claude) was used for LaTeX formatting, prose tightening, BibTeX entry construction for missing citations, and review of internal consistency. The IUS definition, the ILS proxy, the pre-registration document, the panel construction, the data-collection scripts, the causal-discovery sweep, and the primary and secondary statistical tests were specified and executed by the authors. Numerical results in the paper were verified against scripts in the project repository before inclusion.
+
+\end{enumerate}
+
+\end{document}

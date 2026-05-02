@@ -1,0 +1,273 @@
+# IUS Panel Manifest — frozen by /methodology/ius_panel_preregistration.md.
+# Source of truth for all Phase B-H scripts. Deviations require updating §6 of the pre-reg.
+
+version: 1
+frozen_at: 2026-04-16
+prereg_file: methodology/ius_panel_preregistration.md
+
+# Tier semantics:
+#   high: expected PM leader (political/geopolitical/legal info)
+#   mid:  expected mixed (narrower financial channel, smaller economy)
+#   low:  expected follower (scheduled macro, price-based)
+# These classifications are pre-registered; do not change post-hoc.
+
+markets:
+  # ---------------- high-IUS tier ----------------
+  - id: us_pres_election_2024
+    platform: polymarket
+    tier: high
+    title: "Presidential Election Winner 2024"
+    slug: presidential-election-winner-2024
+    yes_token: "21742633143463906290569050155826241533067272736897614950488156847949938836455"
+    no_token:  "48331043336612883890938759509493159234755048973500640148014422747788308965732"
+    fetch_start: 2024-08-01
+    fetch_end:   2024-11-06
+    resolution:  hourly
+    primary_channels:   [SPY_logret, XLE_logret, XLF_logret, XLV_logret]
+    secondary_channels: [IWM_logret, XLC_logret]
+    placebo_channels:   [USO_logret]
+    preexisting_panel:  data/processed/ges_ready_election_hourly_core.parquet
+    rationale: "Political outcome with diffuse financial impact; information aggregates from polls, debates, scandals."
+
+  - id: us_strikes_iran
+    platform: polymarket
+    tier: high
+    title: "US strikes Iran by...?"
+    slug: us-strikes-iran-by
+    yes_token: "__FROM_IUS_PANEL_RAW_JSON__"  # filled at Phase B from configs/ius_panel_raw.json
+    fetch_start: 2024-12-01
+    fetch_end:   2025-07-01
+    resolution:  hourly
+    primary_channels:   [USO_logret, Gold_logret, VIX_logchg]
+    secondary_channels: [SPY_logret, TLT_logret]
+    placebo_channels:   [XLP_logret]
+    preexisting_panel:  data/processed/ges_ready_iran_hourly.parquet
+    rationale: "Geopolitical outcome; information leaks through intelligence, deployment signals. Documented insider trading ($1.2M, 6 wallets, pre-Jan 2025 strikes)."
+    case_study: iran_pre_strike
+
+  - id: trump_fed_chair
+    platform: polymarket
+    tier: high
+    title: "Who will Trump nominate as Fed Chair?"
+    slug: who-will-trump-nominate-as-fed-chair
+    yes_token: "__FROM_IUS_PANEL_RAW_JSON__"
+    fetch_start: 2025-05-01
+    fetch_end:   2026-04-01
+    resolution:  hourly
+    primary_channels:   [TLT_logret, IEF_logret]
+    secondary_channels: [SPY_logret, DXY_logret]
+    placebo_channels:   [USO_logret]
+    rationale: "Regulatory appointment; information leaks through WH sources, candidate shortlists."
+
+  - id: tiktok_ban
+    platform: polymarket
+    tier: high
+    title: "TikTok banned in the US before May 2025?"
+    slug: tiktok-banned-in-the-us-before-may-2025
+    yes_token: "__FROM_IUS_PANEL_RAW_JSON__"
+    fetch_start: 2024-08-01
+    fetch_end:   2025-05-01
+    resolution:  hourly
+    primary_channels:   [META_logret, GOOGL_logret, AAPL_logret]
+    secondary_channels: [SPY_logret]
+    placebo_channels:   [TLT_logret]
+    rationale: "Legal/regulatory; information leaks through DoJ filings, court schedules."
+
+  - id: germany_parl_2025
+    platform: polymarket
+    tier: high
+    title: "Germany Parliamentary Election Winner"
+    slug: germany-parliamentary-election-winner
+    yes_token: "__FROM_IUS_PANEL_RAW_JSON__"
+    fetch_start: 2024-11-01
+    fetch_end:   2025-03-01
+    resolution:  hourly
+    primary_channels:   [EWG_logret, FXE_logret, IEF_logret]
+    secondary_channels: [SPY_logret]
+    placebo_channels:   [USO_logret]
+    rationale: "Electoral outcome with direct EUR/DAX impact; information via polls."
+
+  - id: canada_pm_2025
+    platform: polymarket
+    tier: high
+    title: "Next Prime Minister of Canada after the election?"
+    slug: next-prime-minster-of-canada
+    yes_token: "304223829867910478181460849192"  # truncated; use raw.json
+    fetch_start: 2024-12-01
+    fetch_end:   2025-05-01
+    resolution:  hourly
+    primary_channels:   [FXC_logret, USO_logret]
+    secondary_channels: [SPY_logret]
+    placebo_channels:   [TLT_logret]
+    rationale: "Electoral outcome with CAD/energy impact; information via polls."
+
+  - id: khamenei_out
+    platform: polymarket
+    tier: high
+    title: "Khamenei out as Supreme Leader of Iran by February 28?"
+    slug: khamenei-out-as-supreme-leader-of-iran-by-february-28
+    yes_token: "__FROM_IUS_PANEL_RAW_JSON__"
+    fetch_start: 2026-01-01
+    fetch_end:   2026-03-01
+    resolution:  hourly
+    primary_channels:   [USO_logret, Gold_logret]
+    secondary_channels: [VIX_logchg, SPY_logret]
+    placebo_channels:   [XLP_logret]
+    rationale: "Geopolitical event with oil/defense impact; rumor-driven."
+
+  - id: gov_shutdown_2026
+    platform: polymarket
+    tier: high
+    title: "US government shutdown Saturday?"
+    slug: will-there-be-another-us-government-shutdown-by-january-31
+    yes_token: "__FROM_IUS_PANEL_RAW_JSON__"
+    fetch_start: 2025-11-01
+    fetch_end:   2026-02-01
+    resolution:  hourly
+    primary_channels:   [SPY_logret, TLT_logret, VIX_logchg]
+    secondary_channels: [IWM_logret]
+    placebo_channels:   [USO_logret]
+    rationale: "Legislative brinksmanship; information via congressional leaks."
+
+  # ---------------- mid-IUS tier ----------------
+  - id: sk_president_2025
+    platform: polymarket
+    tier: mid
+    title: "Next president of South Korea?"
+    slug: next-president-of-south-korea
+    yes_token: "__FROM_IUS_PANEL_RAW_JSON__"
+    fetch_start: 2025-01-01
+    fetch_end:   2025-07-01
+    resolution:  hourly
+    primary_channels:   [EWY_logret]
+    secondary_channels: [SPY_logret, Gold_logret]
+    placebo_channels:   [USO_logret]
+    rationale: "Electoral, but KRW/KOSPI impact is narrower than US markets."
+
+  - id: poland_pres_2025
+    platform: polymarket
+    tier: mid
+    title: "Poland Presidential Election"
+    slug: poland-presidential-election
+    yes_token: "__FROM_IUS_PANEL_RAW_JSON__"
+    fetch_start: 2024-12-01
+    fetch_end:   2025-07-01
+    resolution:  hourly
+    primary_channels:   [FXE_logret]
+    secondary_channels: [SPY_logret, IEF_logret]
+    placebo_channels:   [USO_logret]
+    rationale: "Electoral with EUR/PLN impact but smaller-economy."
+
+  - id: speaker_house
+    platform: polymarket
+    tier: mid
+    title: "Who will be the Speaker of the House?"
+    slug: speaker-of-the-house-for-the-119th-congress
+    yes_token: "__FROM_IUS_PANEL_RAW_JSON__"
+    fetch_start: 2024-10-01
+    fetch_end:   2025-03-01
+    resolution:  hourly
+    primary_channels:   [SPY_logret, TLT_logret]
+    secondary_channels: [IWM_logret]
+    placebo_channels:   [USO_logret]
+    rationale: "Procedural legislative outcome; impact is short-lived and diffuse."
+
+  - id: portugal_pres_2026
+    platform: polymarket
+    tier: mid
+    title: "Portugal Presidential Election"
+    slug: portugal-presidential-election
+    yes_token: "__FROM_IUS_PANEL_RAW_JSON__"
+    fetch_start: 2025-08-01
+    fetch_end:   2026-03-01
+    resolution:  hourly
+    primary_channels:   [FXE_logret]
+    secondary_channels: [SPY_logret, IEF_logret]
+    placebo_channels:   [USO_logret]
+    rationale: "Electoral with EUR impact; very small-economy."
+
+  # ---------------- low-IUS tier ----------------
+  - id: kxfed
+    platform: kalshi
+    tier: low
+    title: "KXFED Fed-funds-rate range"
+    source: "Kalshi trades tape (kxfed_all_trades)"
+    resolution: hourly
+    primary_channels:   [TLT_logret, d_effr, d_sofr]
+    secondary_channels: [SPY_logret, IEF_logret]
+    placebo_channels:   [USO_logret]
+    preexisting_panel:  data/processed/ges_ready_hourly.parquet
+    rationale: "Scheduled event (FOMC decision) already priced by Fed-funds futures and rate markets."
+
+  - id: kxcpi
+    platform: kalshi
+    tier: low
+    title: "KXCPI CPI-inflation range"
+    source: "Kalshi trades tape (kxcpi_all_trades)"
+    resolution: hourly
+    primary_channels:   [TLT_logret, d_t10yie]
+    secondary_channels: [SPY_logret, DXY_logret]
+    placebo_channels:   [USO_logret]
+    preexisting_panel:  data/processed/ges_ready_kxcpi_hourly.parquet
+    rationale: "Scheduled event (CPI release) already priced by TIPS breakevens and rate markets."
+
+  - id: polyfed_jan_2026
+    platform: polymarket
+    tier: low
+    title: "Fed decision in January?"
+    slug: fed-decision-in-january
+    yes_token: "__FROM_IUS_PANEL_RAW_JSON__"
+    fetch_start: 2025-11-01
+    fetch_end:   2026-02-01
+    resolution:  hourly
+    primary_channels:   [TLT_logret, d_effr]
+    secondary_channels: [SPY_logret]
+    placebo_channels:   [USO_logret]
+    preexisting_panel:  data/processed/ges_ready_polyfed_hourly.parquet  # older version exists
+    rationale: "Same underlying event as KXFED; competing platform."
+
+  - id: polymarket_btc_2025
+    platform: polymarket
+    tier: low
+    title: "What price will Bitcoin hit in 2025?"
+    slug: what-price-will-bitcoin-hit-in-2025
+    yes_token: "__FROM_IUS_PANEL_RAW_JSON__"
+    fetch_start: 2024-12-01
+    fetch_end:   2026-01-02
+    resolution:  hourly
+    primary_channels:   [BTC_logret]
+    secondary_channels: []
+    placebo_channels:   [SPY_logret]
+    preexisting_panel:  data/processed/ges_ready_polybtc_hourly.parquet
+    rationale: "PM is a derivative on BTC spot price; redundant by construction."
+
+  # ---------------- backup ----------------
+  - id: ireland_pres_2025
+    platform: polymarket
+    tier: mid
+    title: "Ireland Presidential Election"
+    slug: ireland-presidential-election
+    yes_token: "__FROM_IUS_PANEL_RAW_JSON__"
+    fetch_start: 2025-03-01
+    fetch_end:   2025-11-01
+    resolution:  hourly
+    primary_channels:   [FXE_logret]
+    secondary_channels: [SPY_logret, IEF_logret]
+    placebo_channels:   [USO_logret]
+    rationale: "Electoral with EUR impact; backup for H1 panel."
+    role: backup
+
+  - id: romania_pres_2025
+    platform: polymarket
+    tier: mid
+    title: "Romania Presidential Election Winner"
+    slug: romania-presidential-election-winner
+    yes_token: "__FROM_IUS_PANEL_RAW_JSON__"
+    fetch_start: 2024-10-01
+    fetch_end:   2025-06-01
+    resolution:  hourly
+    primary_channels:   [FXE_logret]
+    secondary_channels: [SPY_logret, IEF_logret]
+    placebo_channels:   [USO_logret]
+    rationale: "Electoral with EUR impact; backup for H1 panel."
+    role: backup

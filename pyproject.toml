@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ius"
+version = "0.1.0"
+description = "Information Uniqueness Score: a pre-registered null on a 16-market prediction-market benchmark"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Saman Sayahpour", email = "ssayahpo@andrew.cmu.edu"}]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scipy>=1.10",
+    "scikit-learn>=1.2",
+    "pyarrow>=12.0",
+    "matplotlib>=3.7",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7.0", "pytest-cov"]
+discovery = ["tigramite>=5.2"]
+
+[tool.setuptools.packages.find]
+include = ["ius*"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+filterwarnings = [
+    "ignore::DeprecationWarning:pandas.*",
+    "ignore::FutureWarning",
+]

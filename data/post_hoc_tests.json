@@ -1,0 +1,205 @@
+{
+  "n_markets": 16,
+  "per_metric_spearman": {
+    "leadership_score_L": {
+      "n": 16,
+      "rho": -0.04565542506572064,
+      "p_two_sided": 0.8679,
+      "p_one_sided": 0.5677,
+      "n_perm": 10000
+    },
+    "L_lpcmci_ratio": {
+      "n": 16,
+      "rho": 0.42008402520840293,
+      "p_two_sided": 0.1291,
+      "p_one_sided": 0.0666,
+      "n_perm": 10000
+    },
+    "L_pcmci_ratio": {
+      "n": 16,
+      "rho": 0.14661570066969107,
+      "p_two_sided": 0.5912,
+      "p_one_sided": 0.2905,
+      "n_perm": 10000
+    },
+    "L_leadlag_corr": {
+      "n": 16,
+      "rho": 0.18823529411764706,
+      "p_two_sided": 0.4844,
+      "p_one_sided": 0.2415,
+      "n_perm": 10000
+    },
+    "L_granger_ratio": {
+      "n": 16,
+      "rho": 0.2480959031354612,
+      "p_two_sided": 0.3584,
+      "p_one_sided": 0.1842,
+      "n_perm": 10000
+    }
+  },
+  "best_post_hoc_metric": "L_lpcmci_ratio",
+  "best_post_hoc_p": 0.1291,
+  "panel_data": [
+    {
+      "id": "us_pres_election_2024",
+      "tier": "high",
+      "ils": 0.1768752195507509,
+      "leadership_score_L": 0.08,
+      "L_lpcmci_ratio": 0.0,
+      "L_pcmci_ratio": 0.0,
+      "L_leadlag_corr": 0.024474013935727457,
+      "L_granger_ratio": 0.0
+    },
+    {
+      "id": "us_strikes_iran",
+      "tier": "high",
+      "ils": 0.0070628519730611,
+      "leadership_score_L": 0.52,
+      "L_lpcmci_ratio": 0.0,
+      "L_pcmci_ratio": 0.6,
+      "L_leadlag_corr": -0.0503726081288974,
+      "L_granger_ratio": 0.3333333333333333
+    },
+    {
+      "id": "trump_fed_chair",
+      "tier": "high",
+      "ils": 1.2161846627750033,
+      "leadership_score_L": 0.16,
+      "L_lpcmci_ratio": 0.0,
+      "L_pcmci_ratio": 0.0,
+      "L_leadlag_corr": -0.0017674908342855036,
+      "L_granger_ratio": 0.3333333333333333
+    },
+    {
+      "id": "tiktok_ban",
+      "tier": "high",
+      "ils": 0.3305207678387857,
+      "leadership_score_L": 0.14,
+      "L_lpcmci_ratio": 0.0,
+      "L_pcmci_ratio": 0.0,
+      "L_leadlag_corr": -0.015926261405796508,
+      "L_granger_ratio": 0.0
+    },
+    {
+      "id": "germany_parl_2025",
+      "tier": "high",
+      "ils": 0.0418263319318577,
+      "leadership_score_L": 0.2,
+      "L_lpcmci_ratio": 0.0,
+      "L_pcmci_ratio": 0.0,
+      "L_leadlag_corr": 0.028782163371903178,
+      "L_granger_ratio": 0.0
+    },
+    {
+      "id": "canada_pm_2025",
+      "tier": "high",
+      "ils": 1.685713157776329,
+      "leadership_score_L": 0.12,
+      "L_lpcmci_ratio": 0.0,
+      "L_pcmci_ratio": 0.0,
+      "L_leadlag_corr": -0.007174531775926321,
+      "L_granger_ratio": 0.0
+    },
+    {
+      "id": "khamenei_out",
+      "tier": "high",
+      "ils": 0.014219233165258,
+      "leadership_score_L": 0.04,
+      "L_lpcmci_ratio": 0.0,
+      "L_pcmci_ratio": 0.0,
+      "L_leadlag_corr": -0.03402149589077495,
+      "L_granger_ratio": 0.0
+    },
+    {
+      "id": "gov_shutdown_2026",
+      "tier": "high",
+      "ils": 0.0287685427596476,
+      "leadership_score_L": 0.24,
+      "L_lpcmci_ratio": 0.0,
+      "L_pcmci_ratio": 0.0,
+      "L_leadlag_corr": 0.005418811089605618,
+      "L_granger_ratio": 0.0
+    },
+    {
+      "id": "sk_president_2025",
+      "tier": "mid",
+      "ils": 0.1133171211350453,
+      "leadership_score_L": 0.06,
+      "L_lpcmci_ratio": 0.0,
+      "L_pcmci_ratio": 0.0,
+      "L_leadlag_corr": 0.07953912327129038,
+      "L_granger_ratio": 0.5
+    },
+    {
+      "id": "poland_pres_2025",
+      "tier": "mid",
+      "ils": 1.0584467671614206,
+      "leadership_score_L": 0.1,
+      "L_lpcmci_ratio": 0.0,
+      "L_pcmci_ratio": 0.0,
+      "L_leadlag_corr": -0.001463702052896261,
+      "L_granger_ratio": 0.0
+    },
+    {
+      "id": "speaker_house",
+      "tier": "mid",
+      "ils": 0.1439872361199755,
+      "leadership_score_L": 0.5,
+      "L_lpcmci_ratio": 0.0,
+      "L_pcmci_ratio": 0.4,
+      "L_leadlag_corr": -0.01936028928681337,
+      "L_granger_ratio": 0.5
+    },
+    {
+      "id": "portugal_pres_2026",
+      "tier": "mid",
+      "ils": 0.2041754642618766,
+      "leadership_score_L": 0.2,
+      "L_lpcmci_ratio": 0.0,
+      "L_pcmci_ratio": 0.0,
+      "L_leadlag_corr": 0.019424007351306612,
+      "L_granger_ratio": 0.0
+    },
+    {
+      "id": "kxfed",
+      "tier": "low",
+      "ils": 0.0232615884892294,
+      "leadership_score_L": 0.24,
+      "L_lpcmci_ratio": 0.0,
+      "L_pcmci_ratio": 0.0,
+      "L_leadlag_corr": -0.003503124627705574,
+      "L_granger_ratio": 0.0
+    },
+    {
+      "id": "kxcpi",
+      "tier": "low",
+      "ils": 0.6415791621492115,
+      "leadership_score_L": 0.32,
+      "L_lpcmci_ratio": 0.0,
+      "L_pcmci_ratio": 0.2,
+      "L_leadlag_corr": -0.017684363859445645,
+      "L_granger_ratio": 0.4
+    },
+    {
+      "id": "polyfed_jan_2026",
+      "tier": "low",
+      "ils": 1.6945442670925035,
+      "leadership_score_L": 0.38,
+      "L_lpcmci_ratio": 0.0,
+      "L_pcmci_ratio": 0.3333333333333333,
+      "L_leadlag_corr": 0.02332137002273955,
+      "L_granger_ratio": 0.3333333333333333
+    },
+    {
+      "id": "polymarket_btc_2025",
+      "tier": "low",
+      "ils": 2.6658550880716065,
+      "leadership_score_L": 0.22,
+      "L_lpcmci_ratio": 0.5,
+      "L_pcmci_ratio": 0.5,
+      "L_leadlag_corr": -0.002454976187725143,
+      "L_granger_ratio": 0.5
+    }
+  ],
+  "note": "POST-HOC exploratory analysis. Pre-registered H1 used leadership_score_L. This analysis compares alternative leadership operationalizations but does not override the pre-registered primary decision."
+}

@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+.mypy_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# LaTeX intermediates
+paper/main.aux
+paper/main.bbl
+paper/main.blg
+paper/main.log
+paper/main.out
+paper/main.fdb_latexmk
+paper/main.fls
+paper/main.synctex.gz
+paper/main.toc
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+
+# Generated outputs are reproducible from experiments/
+outputs/*.json
+!outputs/.gitkeep
+
+# Editor scratch
+*.swp
+*.swo
+.idea/
+.vscode/

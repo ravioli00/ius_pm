@@ -1,0 +1,17 @@
+id,tier,ok,n_full,leadership_score_L,pcmci_parcorr_out,pcmci_parcorr_in,pcmci_parcorr_bidir,pcmci_parcorr_role,lpcmci_out,lpcmci_in,lpcmci_bidir,lpcmci_role
+us_pres_election_2024,high,True,471,0.08,0,0,0,isolated,0,0,0,isolated
+us_strikes_iran,high,True,721,0.52,3,1,0,leader,0,0,2,isolated
+trump_fed_chair,high,True,997,0.16,0,2,0,follower,0,0,0,isolated
+tiktok_ban,high,True,1219,0.14,0,0,0,isolated,0,0,0,isolated
+germany_parl_2025,high,True,209,0.2,0,0,0,isolated,0,0,0,isolated
+canada_pm_2025,high,True,249,0.12,0,1,0,follower,0,0,0,isolated
+khamenei_out,high,True,410,0.04,0,2,0,follower,0,0,0,isolated
+gov_shutdown_2026,high,True,705,0.24,0,0,0,isolated,0,0,0,isolated
+sk_president_2025,mid,True,338,0.06,0,1,0,follower,0,1,0,follower
+poland_pres_2025,mid,True,645,0.1,0,0,0,isolated,0,0,0,isolated
+speaker_house,mid,True,485,0.5,2,2,0,mixed,0,0,0,isolated
+portugal_pres_2026,mid,True,660,0.2,0,0,0,isolated,0,0,0,isolated
+kxfed,low,True,2251,0.24,0,0,0,isolated,0,0,1,isolated
+kxcpi,low,True,344,0.32,1,3,0,follower,0,0,0,isolated
+polyfed_jan_2026,low,True,820,0.38,1,1,0,mixed,0,0,0,isolated
+polymarket_btc_2025,low,True,8759,0.22,1,0,0,leader,1,0,0,leader
