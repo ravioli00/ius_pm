@@ -64,7 +64,7 @@ We propose such a predictor. The hypothesis: causal direction between a PM and f
 
 \paragraph{Empirical contributions.}
 \begin{enumerate}\setcounter{enumi}{2}
-\item A pre-registered, diverse panel of 16 prediction markets (eight political/geopolitical/legal, four mid-uniqueness, four price/policy-based) spanning \$7.8B+ of Polymarket volume and 22{,}000+ hourly observations, frozen by manifest and pre-registration hash before any causal-discovery computation (\S\ref{sec:panel}).
+\item A pre-registered, diverse panel of 16 prediction markets (eight political/geopolitical/legal, four mid-uniqueness, four price/policy-based) spanning \$7.8B+ of Polymarket volume and 22{,}000+ hourly observations, frozen prior to any causal-discovery computation (\S\ref{sec:panel}).
 \item A pre-registered null with mechanism analysis: Spearman $\rho(\mathrm{ILS}, L) = -0.046$ at permutation $p = 0.868$; the tier comparison runs opposite the hypothesis. We attribute the result to three identifiable mechanisms (panel-length confounding, ILS estimator noise, inverted directional flow on high-IUS markets), each documented in \S\ref{sec:why}, and to a pre-specified Iran event-window case study showing information flow into the PM rather than out of it.
 \end{enumerate}
 
@@ -186,7 +186,7 @@ We assemble a panel of 16 prediction markets and freeze the panel before any cau
 The eight high-IUS markets cover political, geopolitical, and legal events expected to aggregate information not in financial prices (US Presidential Election 2024, US strikes Iran, Trump Fed Chair nominee, TikTok ban, Germany Parliamentary Feb 2025, Canada PM 2025, Khamenei ouster Feb 2026, US government shutdown Jan 2026). The four mid-IUS markets are intermediate political contracts (SK Presidential 2025, Poland Presidential 2025, Speaker of the House, Portugal Presidential 2026). The four low-IUS markets are price- or rate-based (KXFED, KXCPI, PolyFed Jan 2026, Polymarket BTC 2025), where information is already impounded in liquid instruments. Tier assignment was made by author judgment of expected information-uniqueness profile prior to any IUS computation; we do not propose a quantitative tier-assignment rule, and tier-level tests should be read as exploratory rather than confirmatory. All sixteen markets passed the acceptance criteria. Total Polymarket volume across the 14 Polymarket markets exceeds \$7.8B. The panel is a convenience sample from publicly accessible PM contracts meeting the criteria, not a probability sample of all PM contracts; generalization beyond this panel is not warranted by the panel test alone.
 
 \paragraph{Data provenance.}
-Polymarket prices were fetched from the public CLOB \texttt{prices-history} endpoint in 14-day chunks at 60-minute fidelity. Kalshi trades data are public via the \texttt{api.elections.kalshi.com} trade tape. Financial channels (SPY, IWM, TLT, USO, UUP, UVXY, BTC plus per-market specialists META, GOOGL, AAPL, BIDU, EWG, FXE, FXC, EWY, ITA) are from Databento XNAS.ITCH ohlcv-1h. All raw and processed parquets are reproducible from the manifest commit SHA.
+Polymarket prices were fetched from the public CLOB \texttt{prices-history} endpoint in 14-day chunks at 60-minute fidelity. Kalshi trades data are public via the \texttt{api.elections.kalshi.com} trade tape. Financial channels (SPY, IWM, TLT, USO, UUP, UVXY, BTC plus per-market specialists META, GOOGL, AAPL, BIDU, EWG, FXE, FXC, EWY, ITA) are from Databento XNAS.ITCH ohlcv-1h. All raw and processed panel parquets are reproducible from the panel manifest.
 
 \paragraph{Primary tests.}
 The pre-registered primary test (H1) is the two-sided permutation test of $\rho_{\text{Spearman}}(\mathrm{ILS}_m, L_m)$ over the 16 markets, where $L_m \in [0,1]$ is the bootstrap fraction of PCMCI+ replicates classifying PM as the leader on market $m$. The secondary tier test (H2) is the Mann-Whitney $U$ test \citep{mann1947test} on $L$ across high/mid/low IUS tiers with Benjamini-Hochberg FDR \citep{benjamini1995controlling} at $q \le 0.10$. The full panel and tier assignments appear in Table~\ref{tab:ius_panel}.
@@ -296,7 +296,7 @@ If panel-length confounding is the dominant mechanism, restricting the test to m
 \centering
 \caption{Post-hoc subset analysis: Spearman $\rho(\mathrm{ILS}, L)$ across leadership operationalizations on the 5 markets with $n_\text{used} \ge 800$. All five operationalizations yield positive $\rho$, with mean $+0.67$. Two reach one-sided permutation $p \le 0.05$. The pre-registered $L$ flips from $-0.046$ on the full panel to $+0.20$ on this subset. \emph{Strictly post-hoc and underpowered at $n = 5$; reported as a direct test of Mechanism (1) rather than as evidence overturning the pre-registered null.}}
 \label{tab:long_panel_subset}
-\small
+\footnotesize
 \begin{tabular}{lcccc}
 \toprule
 $L$ operationalization & $\rho$ on $n=5$ subset & one-sided perm $p$ & $\rho$ on full $n=16$ & direction agrees \\
@@ -307,7 +307,7 @@ $L_\text{LPCMCI directed-edge ratio}$  & $+0.707$ & $0.198$         & $+0.420$ &
 $L_\text{lead-lag cross-correlation}$  & $+0.600$ & $0.182$         & $+0.188$ & yes \\
 $L$ (pre-registered, PCMCI+ bootstrap) & $+0.200$ & $0.395$         & $-0.046$ & flips to positive \\
 \midrule
-mean $\rho$                       & $+0.670$ & --- & $+0.191$ & 5/5 positive \\
+mean $\rho$                       & $+0.670$ & n/a & $+0.191$ & 5/5 positive \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -344,7 +344,7 @@ High-IUS markets are the ones expected to lead financial prices, because they ag
 We define the Information Uniqueness Score (IUS) and a computable proxy (ILS) that formalize when prediction markets should lead financial markets. The pre-registered Spearman rank correlation between ILS and the bootstrap leadership score across the 16-market panel is $-0.046$ at permutation $p = 0.868$; the tier comparison runs opposite the hypothesis; and the one panel market with reported pre-event insider trading shows information flow into the PM, not out of it. The null is robust to method, to non-Gaussianity, and to causal-sufficiency violations, modulo the shared $n = 16$ power constraint. Three mechanisms (panel-length confounding, ILS estimator noise, inverted directional flow on insider-trading markets) account for the failure. The panel is released as a public benchmark for future PM causal-discovery work.
 
 \paragraph{Reproducibility.}
-All raw data sources are public (Polymarket CLOB, Kalshi trade tape, Databento). The pre-registration document, panel manifest, computation scripts, and bootstrap protocol are in the project repository; the panel test, post-hoc sensitivity, and Iran case study can be reproduced end-to-end from the manifest commit SHA.
+All raw data sources are public (Polymarket CLOB, Kalshi trade tape, Databento). The pre-registration document, panel manifest, computation scripts, and bootstrap protocol are in the project repository; the panel test, post-hoc sensitivity, and Iran case study can be reproduced end-to-end from the panel manifest.
 
 \paragraph{Acknowledgments.}
 This paper is submitted as a final class project for CMU 80-816/516. The author thanks the course instructors for the project framing.
@@ -428,7 +428,7 @@ where $\mathrm{SS}$ denotes the incremental sum-of-squares from adding the sourc
 \centering
 \caption{Synthetic Monte Carlo recovery. Each row simulates $n_\text{markets}$ markets with $\alpha \sim \text{Uniform}[-1, 1]$, $n_\text{obs}$ hourly observations per market, $K = 5$ financial channels. Top block: linear-Gaussian baseline at three panel sizes. Bottom block: violated-DGP robustness at fixed $n_\text{markets} = 30, n_\text{obs} = 1{,}000$.}
 \label{tab:synthetic}
-\small
+\footnotesize
 \begin{tabular}{lcccccc}
 \toprule
 Configuration & $n_\text{markets}$ & $n_\text{obs}$ & $\rho(\mathrm{ILS}, L)$ & $p_\text{perm}$ (two-sided) & $\rho(\mathrm{ILS}, \alpha)$ & $\rho(L, \alpha)$ \\
@@ -538,7 +538,7 @@ Justification: Pre-registration document (Appendix~\ref{app:prereg}), manifest (
 \item {\bf Open access to data and code}\\
 Question: Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results?\\
 Answer: \answerYes{}\\
-Justification: The benchmark panel is constructed from public data sources (Polymarket CLOB \texttt{prices-history}, Kalshi public trade tape, Databento with the data hashes documented). The repository contains collectors, panel-builder, IUS estimator, sweep runner, and the pre-registered test scripts.
+Justification: The benchmark panel is constructed from public data sources (Polymarket CLOB \texttt{prices-history}, Kalshi public trade tape, Databento). The repository contains the panel manifest, IUS estimator, leadership-score sweep runner, and the pre-registered test scripts.
 
 \item {\bf Experimental Setting/Details}\\
 Question: Does the paper specify all the training and test details?\\
